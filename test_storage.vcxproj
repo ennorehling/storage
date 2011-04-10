@@ -78,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\cutest\CuTest.c" />
-    <ClCompile Include="storage_test.c" />
+    <ClCompile Include="test_storage.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="storage.vcxproj">
