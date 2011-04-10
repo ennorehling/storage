@@ -10,41 +10,41 @@
 #define NULL_TOKEN '@'
 #define isxspace(c) (c==160 || isspace(c))
 
-static int txt_w_brk(struct storage *store)
+static int txt_w_brk(HSTORAGE store)
 {
-  putc('\n', (FILE *) store->userdata);
+  putc('\n', (FILE *) store);
   return 1;
 }
 
-static int txt_w_int(struct storage *store, int arg)
+static int txt_w_int(HSTORAGE store, int arg)
 {
-  return fprintf((FILE *) store->userdata, "%d ", arg);
+  return fprintf((FILE *) store, "%d ", arg);
 }
 
-static int txt_r_int(struct storage *store)
+static int txt_r_int(HSTORAGE store)
 {
   int result;
-  fscanf((FILE *) store->userdata, "%d", &result);
+  fscanf((FILE *) store, "%d", &result);
   return result;
 }
 
-static int txt_w_flt(struct storage *store, float arg)
+static int txt_w_flt(HSTORAGE store, float arg)
 {
-  return fprintf((FILE *) store->userdata, "%f ", arg);
+  return fprintf((FILE *) store, "%f ", arg);
 }
 
-static float txt_r_flt(struct storage *store)
+static float txt_r_flt(HSTORAGE store)
 {
   double result;
-  fscanf((FILE *) store->userdata, "%lf", &result);
+  fscanf((FILE *) store, "%lf", &result);
   return (float)result;
 }
 
-static int txt_w_tok(struct storage *store, const char *tok)
+static int txt_w_tok(HSTORAGE store, const char *tok)
 {
   int result;
   if (tok == NULL || tok[0] == 0) {
-    result = fputc(NULL_TOKEN, (FILE *) store->userdata);
+    result = fputc(NULL_TOKEN, (FILE *) store);
   } else {
 #ifndef NDEBUG
     const char *find = strchr(tok, ' ');
@@ -53,25 +53,25 @@ static int txt_w_tok(struct storage *store, const char *tok)
     assert(!find || !"reserved character in token");
     assert(tok[0] != ' ');
 #endif
-    result = fputs(tok, (FILE *) store->userdata);
+    result = fputs(tok, (FILE *) store);
   }
-  fputc(' ', (FILE *) store->userdata);
+  fputc(' ', (FILE *) store);
   return result;
 }
 
-static int txt_r_tok_buf(struct storage *store, char *result, size_t size)
+static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
 {
   char format[16];
   if (result && size > 0) {
     format[0] = '%';
     sprintf(format + 1, "%us", size);
-    fscanf((FILE *) store->userdata, format, result);
+    fscanf((FILE *) store, format, result);
     if (result[0] == NULL_TOKEN) {
       result[0] = 0;
     }
   } else {
     /* trick to skip when no result expected */
-    fscanf((FILE *) store->userdata, "%*s");
+    fscanf((FILE *) store, "%*s");
   }
   return 0;
 }
@@ -159,42 +159,39 @@ static int fwritestr(FILE * F, const char *str)
   return nwrite + 2;
 }
 
-static int txt_w_str(struct storage *store, const char *str)
+static int txt_w_str(HSTORAGE store, const char *str)
 {
-  int result = fwritestr((FILE *) store->userdata, str);
-  fputc(' ', (FILE *) store->userdata);
+  int result = fwritestr((FILE *) store, str);
+  fputc(' ', (FILE *) store);
   return result + 1;
 }
 
-static int txt_r_str_buf(struct storage *store, char *result, size_t size)
+static int txt_r_str_buf(HSTORAGE store, char *result, size_t size)
 {
-  freadstr((FILE *) store->userdata, result, size);
+  freadstr((FILE *) store, result, size);
   return 0;
 }
 
-static int txt_open(struct storage *store, const char *filename, int mode)
+static HSTORAGE txt_open(FILE * F, int mode)
 {
-  const char *modes[] = { 0, "rt", "wt", "at" };
-  FILE *F = fopen(filename, modes[mode]);
-  store->userdata = F;
-  return (F == NULL);
+  return (HSTORAGE)F;
 }
 
-static int txt_w_bin(struct storage *store, void *arg, size_t size)
+static int txt_w_bin(HSTORAGE store, void *arg, size_t size)
 {
   assert(!"not implemented!");
   return 0;
 }
 
-static int txt_r_bin(struct storage *store, void *result, size_t size)
+static int txt_r_bin(HSTORAGE store, void *result, size_t size)
 {
   assert(!"not implemented!");
   return 0;
 }
 
-static int txt_close(struct storage *store)
+static int txt_close(HSTORAGE store)
 {
-  return fclose((FILE *) store->userdata);
+  return fclose((FILE *) store);
 }
 
 const storage text_store = {
@@ -204,6 +201,5 @@ const storage text_store = {
   txt_w_tok, txt_r_tok_buf,
   txt_w_str, txt_r_str_buf,
   txt_w_bin, txt_r_bin,
-  txt_open, txt_close,
-  NULL
+  txt_open, txt_close
 };

@@ -2,34 +2,35 @@
 #define STORAGE_H
 
 #include <stddef.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+  typedef void* HSTORAGE;
+
   typedef struct storage {
     /* separator for readable files: */
-    int (*w_brk) (struct storage *);
+    int (*w_brk) (HSTORAGE store);
     /* integer values: */
-    int (*w_int) (struct storage *, int arg);
-    int (*r_int) (struct storage *);
+    int (*w_int) (HSTORAGE store, int arg);
+    int (*r_int) (HSTORAGE store);
     /* float values: */
-    int (*w_flt) (struct storage *, float arg);
-    float (*r_flt) (struct storage *);
+    int (*w_flt) (HSTORAGE store, float arg);
+    float (*r_flt) (HSTORAGE store);
     /* tokens that contain no whitespace: */
-    int (*w_tok) (struct storage *, const char *tok);
-    int (*r_tok) (struct storage *, char *result, size_t size);
+    int (*w_tok) (HSTORAGE store, const char *tok);
+    int (*r_tok) (HSTORAGE store, char *result, size_t size);
     /* strings that need to be quoted: */
-    int (*w_str) (struct storage *, const char *tok);
-    int (*r_str) (struct storage *, char *result, size_t size);
+    int (*w_str) (HSTORAGE store, const char *tok);
+    int (*r_str) (HSTORAGE store, char *result, size_t size);
     /* binary data: */
-    int (*w_bin) (struct storage *, void *arg, size_t size);
-    int (*r_bin) (struct storage *, void *result, size_t size);
+    int (*w_bin) (HSTORAGE store, void *arg, size_t size);
+    int (*r_bin) (HSTORAGE store, void *result, size_t size);
 
-    int (*open) (struct storage *, const char *filename, int mode);
-    int (*close) (struct storage *);
-
-    void *userdata;
+    HSTORAGE (*begin) (FILE * F, int mode);
+    int (*end) (HSTORAGE store);
   } storage;
 
 #define IO_READ 0x01
