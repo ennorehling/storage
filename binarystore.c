@@ -90,18 +90,6 @@ static int bin_r_int_pak(HSTORAGE store)
   return v;
 }
 
-static int bin_w_int(HSTORAGE store, int arg)
-{
-  return (int)fwrite(&arg, sizeof(arg), 1, file(store));
-}
-
-static int bin_r_int(HSTORAGE store)
-{
-  int result;
-  fread(&result, sizeof(result), 1, file(store));
-  return result;
-}
-
 static int bin_w_flt(HSTORAGE store, float arg)
 {
   return (int)fwrite(&arg, sizeof(arg), 1, file(store));

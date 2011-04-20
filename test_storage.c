@@ -16,11 +16,13 @@ static void test_open_close(CuTest * tc, const storage * api)
   store = api->begin(F, IO_WRITE);
   CuAssertPtrNotNull(tc, store);
   CuAssertIntEquals(tc, 0, api->end(store));
+  fclose(F);
 
   F = fopen("test.dat", "rb");
   store = api->begin(F, IO_READ);
   CuAssertPtrNotNull(tc, store);
   CuAssertIntEquals(tc, 0, api->end(store));
+  fclose(F);
 }
 
 static void test_read_write(CuTest * tc, const storage * api)

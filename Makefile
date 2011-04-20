@@ -1,9 +1,9 @@
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 CC = gcc
 CUTEST = ..
 INCLUDES = -I$(CUTEST)
 
-all: storage_test
+all: test_storage
 
 binarystore.o: binarystore.c binarystore.h storage.h
 	$(CC) -c binarystore.c $(INCLUDES) $(CFLAGS)

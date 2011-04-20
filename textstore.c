@@ -172,11 +172,6 @@ static int txt_r_str_buf(HSTORAGE store, char *result, size_t size)
   return 0;
 }
 
-static HSTORAGE txt_open(FILE * F, int mode)
-{
-  return (HSTORAGE)F;
-}
-
 static int txt_w_bin(HSTORAGE store, void *arg, size_t size)
 {
   assert(!"not implemented!");
@@ -189,9 +184,14 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t size)
   return 0;
 }
 
+static HSTORAGE txt_open(FILE * F, int mode)
+{
+  return (HSTORAGE)F;
+}
+
 static int txt_close(HSTORAGE store)
 {
-  return fclose((FILE *) store);
+  return 0;
 }
 
 const storage text_store = {
