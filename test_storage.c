@@ -7,9 +7,7 @@
 #include <float.h>
 #include <string.h>
 
-const storage * api;
-
-static void test_open_close(CuTest * tc)
+static void test_open_close(CuTest * tc, const storage * api)
 {
   FILE * F;
   HSTORAGE store;
@@ -25,7 +23,7 @@ static void test_open_close(CuTest * tc)
   CuAssertIntEquals(tc, 0, api->end(store));
 }
 
-static void test_read_write(CuTest * tc)
+static void test_read_write(CuTest * tc, const storage * api)
 {
   FILE * F;
   HSTORAGE store;
@@ -55,15 +53,32 @@ static void test_read_write(CuTest * tc)
   fclose(F);
 }
 
+static void test_open_close_bin(CuTest * tc) {
+  test_open_close(tc, &binary_store);
+}
+
+static void test_open_close_txt(CuTest * tc) {
+  test_open_close(tc, &text_store);
+}
+
+static void test_read_write_bin(CuTest * tc) {
+  test_read_write(tc, &binary_store);
+}
+
+static void test_read_write_txt(CuTest * tc) {
+  test_read_write(tc, &text_store);
+}
+
 int main(int argc, char ** argv)
 {
   CuString *output = CuStringNew();
   CuSuite *suite = CuSuiteNew();
 
-  SUITE_ADD_TEST(suite, test_open_close);
-  SUITE_ADD_TEST(suite, test_read_write);
+  SUITE_ADD_TEST(suite, test_open_close_bin);
+  SUITE_ADD_TEST(suite, test_read_write_bin);
+  SUITE_ADD_TEST(suite, test_open_close_txt);
+  SUITE_ADD_TEST(suite, test_read_write_txt);
 
-  api = &text_store;
   CuSuiteRun(suite);
 
   CuSuiteSummary(suite, output);
