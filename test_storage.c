@@ -23,6 +23,8 @@ static void test_open_close(CuTest * tc, const storage * api)
   CuAssertPtrNotNull(tc, store);
   CuAssertIntEquals(tc, 0, api->end(store));
   fclose(F);
+
+  remove("test.dat");
 }
 
 static void test_read_write(CuTest * tc, const storage * api)
@@ -53,6 +55,8 @@ static void test_read_write(CuTest * tc, const storage * api)
   CuAssertStrEquals(tc, "gazebo", buffer);
   CuAssertIntEquals(tc, 0, api->end(store));
   fclose(F);
+
+  remove("test.dat");
 }
 
 static void test_open_close_bin(CuTest * tc) {
