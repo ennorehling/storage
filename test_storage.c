@@ -71,20 +71,10 @@ static void test_read_write_txt(CuTest * tc) {
   test_read_write(tc, &text_store);
 }
 
-int main(int argc, char ** argv)
+void add_suite_storage(CuSuite *suite)
 {
-  CuString *output = CuStringNew();
-  CuSuite *suite = CuSuiteNew();
-
   SUITE_ADD_TEST(suite, test_open_close_bin);
   SUITE_ADD_TEST(suite, test_read_write_bin);
   SUITE_ADD_TEST(suite, test_open_close_txt);
   SUITE_ADD_TEST(suite, test_read_write_txt);
-
-  CuSuiteRun(suite);
-
-  CuSuiteSummary(suite, output);
-  CuSuiteDetails(suite, output);
-  printf("%s\n", output->buffer);
-  return suite->failCount;
 }
