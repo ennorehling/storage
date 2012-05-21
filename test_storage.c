@@ -32,6 +32,8 @@ static void test_read_write(CuTest * tc, const storage * api)
   FILE * F;
   HSTORAGE store;
   char buffer[32];
+  int i;
+  float f;
   
   F = fopen("test.dat", "wb");
   store = api->begin(F, IO_WRITE);
@@ -47,8 +49,12 @@ static void test_read_write(CuTest * tc, const storage * api)
   F = fopen("test.dat", "rb");
   store = api->begin(F, IO_READ);
   CuAssertPtrNotNull(tc, store);
-  CuAssertIntEquals(tc, 42, api->r_int(store));
-  CuAssertDblEquals(tc, FLT_MAX, api->r_flt(store), FLT_MIN);
+
+  CuAssertIntEquals(tc, 0, api->r_int(store, &i));
+  CuAssertIntEquals(tc, 42, i);
+
+  CuAssertIntEquals(tc, 0, api->r_flt(store, &f));
+  CuAssertDblEquals(tc, FLT_MAX, f, FLT_MIN);
   CuAssertIntEquals(tc, 0, api->r_str(store, buffer, 32));
   CuAssertStrEquals(tc, "Hello World", buffer);
   CuAssertIntEquals(tc, 0, api->r_tok(store, buffer, 32));

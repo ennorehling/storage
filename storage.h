@@ -15,10 +15,10 @@ extern "C" {
     int (*w_brk) (HSTORAGE store);
     /* integer values: */
     int (*w_int) (HSTORAGE store, int arg);
-    int (*r_int) (HSTORAGE store);
+    int (*r_int) (HSTORAGE store, int *result);
     /* float values: */
     int (*w_flt) (HSTORAGE store, float arg);
-    float (*r_flt) (HSTORAGE store);
+    int (*r_flt) (HSTORAGE store, float * result);
     /* tokens that contain no whitespace: */
     int (*w_tok) (HSTORAGE store, const char *tok);
     int (*r_tok) (HSTORAGE store, char *result, size_t size);

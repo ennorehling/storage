@@ -21,11 +21,10 @@ static int txt_w_int(HSTORAGE store, int arg)
   return fprintf((FILE *) store, "%d ", arg);
 }
 
-static int txt_r_int(HSTORAGE store)
+static int txt_r_int(HSTORAGE store, int * result)
 {
-  int result;
-  fscanf((FILE *) store, "%d", &result);
-  return result;
+  int err = fscanf((FILE *) store, "%d", result);
+  return (err==1) ? 0 : EOF;
 }
 
 static int txt_w_flt(HSTORAGE store, float arg)
@@ -33,11 +32,10 @@ static int txt_w_flt(HSTORAGE store, float arg)
   return fprintf((FILE *) store, "%f ", arg);
 }
 
-static float txt_r_flt(HSTORAGE store)
+static int txt_r_flt(HSTORAGE store, float * result)
 {
-  double result;
-  fscanf((FILE *) store, "%lf", &result);
-  return (float)result;
+  int err = fscanf((FILE *) store, "%f", result);
+  return (err==1) ? 0 : EOF;
 }
 
 static int txt_w_tok(HSTORAGE store, const char *tok)
@@ -65,13 +63,15 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
   if (result && size > 0) {
     format[0] = '%';
     sprintf(format + 1, "%us", size);
-    fscanf((FILE *) store, format, result);
+    if (fscanf((FILE *) store, format, result)!=1) {
+      return EOF;
+    }
     if (result[0] == NULL_TOKEN) {
       result[0] = 0;
     }
   } else {
     /* trick to skip when no result expected */
-    fscanf((FILE *) store, "%*s");
+    return fscanf((FILE *) store, "%*s");
   }
   return 0;
 }

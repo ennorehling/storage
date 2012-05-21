@@ -72,22 +72,30 @@ static int bin_w_int_pak(HSTORAGE store, int arg)
   return (int)fwrite(buffer, sizeof(char), size, file(store));
 }
 
-static int bin_r_int_pak(HSTORAGE store)
+static int bin_r_int_pak(HSTORAGE store, int * result)
 {
   int v = 0;
+  size_t items;
   char ch;
 
-  fread(&ch, sizeof(char), 1, file(store));
+  items = fread(&ch, sizeof(char), 1, file(store));
+  if (items!=1) {
+    return EOF;
+  }
   while (ch & 0x80) {
     v = (v << 7) | (ch & 0x7f);
-    fread(&ch, sizeof(char), 1, file(store));
+    items = fread(&ch, sizeof(char), 1, file(store));
+    if (items!=1) {
+      return EOF;
+    }
   }
   v = (v << 6) | (ch & 0x3f);
 
   if (ch & 0x40) {
     v = ~v + 1;
   }
-  return v;
+  *result = v;
+  return 0;
 }
 
 static int bin_w_flt(HSTORAGE store, float arg)
@@ -95,11 +103,12 @@ static int bin_w_flt(HSTORAGE store, float arg)
   return (int)fwrite(&arg, sizeof(arg), 1, file(store));
 }
 
-static float bin_r_flt(HSTORAGE store)
+static int bin_r_flt(HSTORAGE store, float * result)
 {
-  float result;
-  fread(&result, sizeof(result), 1, file(store));
-  return result;
+  size_t items;
+  
+  items = fread(result, sizeof(float), 1, file(store));
+  return (items==1) ? 0 : EOF;
 }
 
 static int bin_w_str(HSTORAGE store, const char *tok)
@@ -117,19 +126,27 @@ static int bin_w_str(HSTORAGE store, const char *tok)
 
 static int bin_r_str_buf(HSTORAGE store, char *result, size_t size)
 {
-  int i;
-  size_t rd, len;
+  int i, err;
+  size_t rd, len, items;
 
-  i = bin_r_int_pak(store);
-  assert(i >= 0);
+  err = bin_r_int_pak(store, &i);
+  if (err!=0) {
+    return err;
+  }
   if (i == 0) {
     result[0] = 0;
   } else {
     len = (size_t) i;
     rd = (len<size) ? len : (size - 1);
-    fread(result, sizeof(char), rd, file(store));
-    if (rd < len) {
-      fseek(file(store), (long)(len - rd), SEEK_CUR);
+    items = fread(result, sizeof(char), rd, file(store));
+    if (items!=rd) {
+      return EOF;
+    }
+    else if (rd < len) {
+      err = fseek(file(store), (long)(len - rd), SEEK_CUR);
+      if (err) {
+        return err;
+      }
       result[size - 1] = 0;
       return ENOMEM;
     } else {
@@ -153,15 +170,21 @@ static int bin_w_bin(HSTORAGE store, void *arg, size_t size)
 
 static int bin_r_bin(HSTORAGE store, void *result, size_t size)
 {
-  int len = bin_r_int_pak(store);
+  size_t items;
+  int len, err;
+  
+  err = bin_r_int_pak(store, &len);
+  if (err!=0) {
+    return err;
+  }
   if (len > 0) {
     if ((size_t) len > size) {
       /* "destination buffer too small */
       fseek(file(store), len, SEEK_CUR);
       return ENOMEM;
     } else {
-      fread(result, len, 1, file(store));
-      return 0;
+      items = fread(result, len, 1, file(store));
+      return (items==1) ? 0 : EOF;
     }
   }
   return EILSEQ;
