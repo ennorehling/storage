@@ -1,5 +1,5 @@
-#ifndef H_KERNEL_TEXTSTORE
-#define H_KERNEL_TEXTSTORE
+#ifndef H_STORAGE_TEXTSTORE
+#define H_STORAGE_TEXTSTORE
 #ifdef __cplusplus
 extern "C" {
 #endif

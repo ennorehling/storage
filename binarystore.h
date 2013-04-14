@@ -1,5 +1,5 @@
-#ifndef H_KERNEL_BINSTORE
-#define H_KERNEL_BINSTORE
+#ifndef H_STORAGE_BINSTORE
+#define H_STORAGE_BINSTORE
 #ifdef __cplusplus
 extern "C" {
 #endif

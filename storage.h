@@ -1,5 +1,5 @@
-#ifndef STORAGE_H
-#define STORAGE_H
+#ifndef H_STORAGE_INTERFACE
+#define H_STORAGE_INTERFACE
 
 #include <stddef.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
 #include "binarystore.h"
 #include "textstore.h"
 
-#include <cutest/CuTest.h>
+#include <CuTest.h>
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
