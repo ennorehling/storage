@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-    void fstream_init(struct stream * strm, FILE * F);
+struct stream;
+void fstream_init(struct stream * strm, FILE * F);
 
 #ifdef __cplusplus
 }

@@ -1,11 +1,11 @@
 project (storage C)
 
 FILE (GLOB LIB_HDR *.h)
-add_library (${PROJECT_NAME} binarystore.c textstore.c ${LIB_HDR})
+add_library (${PROJECT_NAME} binarystore.c textstore.c filestream.c memstream.c ${LIB_HDR})
 
 INCLUDE_DIRECTORIES (${CUTEST_INCLUDE_DIR})
 
-add_executable (storage_tests tests.c storage.test.c stream.test.c filestream.c memstream.c )
+add_executable (storage_tests tests.c storage.test.c stream.test.c )
 TARGET_LINK_LIBRARIES (storage_tests ${CUTEST_LIBRARIES} )
 target_link_libraries (storage_tests storage )
 
