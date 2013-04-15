@@ -3,6 +3,7 @@
 #include <string.h>
 
 void add_suite_storage(CuSuite *suite);
+void add_suite_stream(CuSuite *suite);
 
 int main(int argc, char ** argv)
 {
@@ -10,6 +11,7 @@ int main(int argc, char ** argv)
   CuSuite *suite = CuSuiteNew();
 
   add_suite_storage(suite);
+  add_suite_stream(suite);
 
   CuSuiteRun(suite);
   CuSuiteSummary(suite, output);
