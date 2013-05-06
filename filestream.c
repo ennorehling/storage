@@ -45,3 +45,8 @@ void fstream_init(struct stream * strm, FILE * F) {
     strm->api = &filestream;
     strm->handle = (HSTREAM)F;
 }
+
+void fstream_done(struct stream * strm) {
+    FILE * F = (FILE *)strm->handle;
+    fclose(F);
+}

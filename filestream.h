@@ -10,7 +10,7 @@ extern "C" {
 
 struct stream;
 void fstream_init(struct stream * strm, FILE * F);
-
+void fstream_done(struct stream * strm);
 #ifdef __cplusplus
 }
 #endif
