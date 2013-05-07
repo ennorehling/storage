@@ -1,8 +1,11 @@
 # I am not very good at Makefiles.
 
-#CFLAGS = -Wall -g
+ifndef CUTEST
+CUTEST = cutest
+endif
+
 CFLAGS += -Wall -O3
-INCLUDES = -I.
+INCLUDES = -I. -I$(CUTEST)
 
 all: tests
 
@@ -13,8 +16,8 @@ tests: bin/tests
 	@bin/tests
 
 bin/tests: tests.c \
-test_storage.c binarystore.c textstore.c \
-cutest/CuTest.c | bin
+storage.test.c stream.test.c filestream.c memstream.c binarystore.c textstore.c \
+$(CUTEST)/CuTest.c | bin
 	$(CC) $(CFLAGS) $(INCLUDES) -lm -o $@ $^
 
 clean:
