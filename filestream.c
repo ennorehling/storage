@@ -5,7 +5,7 @@
 
 static int fs_readln(HSTREAM s, char * out, size_t outlen) {
     char * eol;
-    FILE * F = (FILE *)s;
+    FILE * F = (FILE *)s->data;
 
     if (fgets(out, outlen, F)!=out) {
         return EOF;
@@ -18,7 +18,7 @@ static int fs_readln(HSTREAM s, char * out, size_t outlen) {
 }
 
 static int fs_writeln(HSTREAM s, const char * out) {
-    FILE * F = (FILE *)s;
+    FILE * F = (FILE *)s->data;
     int res = fputs(out, F);
     if (res<0) {
         return res;
@@ -31,7 +31,7 @@ static int fs_writeln(HSTREAM s, const char * out) {
 }
         
 static void fs_rewind(HSTREAM s) {
-    FILE * F = (FILE *)s;
+    FILE * F = (FILE *)s->data;
     rewind(F);
 }
 
@@ -43,10 +43,10 @@ const stream_i filestream = {
 
 void fstream_init(struct stream * strm, FILE * F) {
     strm->api = &filestream;
-    strm->handle = (HSTREAM)F;
+    strm->handle->data = F;
 }
 
 void fstream_done(struct stream * strm) {
-    FILE * F = (FILE *)strm->handle;
+    FILE * F = (FILE *)strm->handle->data;
     fclose(F);
 }

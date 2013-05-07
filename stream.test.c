@@ -31,13 +31,11 @@ static void test_read_write_memory(CuTest * tc) {
 }
 
 static void test_read_write_file(CuTest * tc) {
-    FILE * F;
     stream strm;
 
-    F = fopen("test.txt", "w+b");
-    fstream_init(&strm, F);
+    fstream_init(&strm, fopen("test.txt", "w+b"));
     test_read_write(tc, &strm);
-    fclose(F);
+    fstream_done(&strm);
 }
 
 void add_suite_stream(CuSuite *suite)

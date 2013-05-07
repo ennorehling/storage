@@ -16,7 +16,7 @@ tests: bin/tests
 	@bin/tests
 
 bin/tests: tests.c \
-storage.test.c stream.test.c filestream.c memstream.c binarystore.c textstore.c \
+storage.test.c stream.test.c stream.h filestream.h memstream.h filestream.c memstream.c binarystore.c textstore.c \
 $(CUTEST)/CuTest.c | bin
 	$(CC) $(CFLAGS) $(INCLUDES) -lm -o $@ $^
 
