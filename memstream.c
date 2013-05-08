@@ -24,7 +24,7 @@ static void free_strlist(strlist ** ptr) {
 }
 
 static int ms_readln(HSTREAM s, char * out, size_t outlen) {
-    memstream * ms = (memstream *)s->data;
+    memstream * ms = (memstream *)s.data;
     strlist * list = *ms->pos;
 
     if (list==0) {
@@ -37,7 +37,7 @@ static int ms_readln(HSTREAM s, char * out, size_t outlen) {
 }
 
 static int ms_writeln(HSTREAM s, const char * out) {
-    memstream * ms = (memstream *)s->data;
+    memstream * ms = (memstream *)s.data;
     strlist ** ptr = ms->pos;
     strlist * list = (strlist *)malloc(sizeof(strlist));
 
@@ -53,7 +53,7 @@ static int ms_writeln(HSTREAM s, const char * out) {
 }
         
 static void ms_rewind(HSTREAM s) {
-    memstream * ms = (memstream *)s->data;
+    memstream * ms = (memstream *)s.data;
     ms->pos = &ms->ptr;
 }
 
@@ -69,12 +69,12 @@ void mstream_init(struct stream * strm) {
     ms->ptr = 0;
     ms->pos = &ms->ptr;
     strm->api = &api;
-    strm->handle->data = (HSTREAM)ms;
+    strm->handle.data = ms;
 }
 
 void mstream_done(struct stream * strm)
 {
-    memstream * ms = (memstream *)strm->handle->data;
+    memstream * ms = (memstream *)strm->handle.data;
     free_strlist(&ms->ptr);
     free(ms);
 }

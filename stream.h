@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-    typedef struct STREAM_ {
+    typedef struct HSTREAM {
         void* data;
-    } STREAM_, *HSTREAM;
+    } HSTREAM;
 
     typedef struct stream_i {
         int (*writeln)(HSTREAM s, const char * out);
