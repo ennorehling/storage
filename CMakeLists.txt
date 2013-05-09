@@ -1,7 +1,7 @@
 project (storage C)
 
 FILE (GLOB LIB_HDR *.h)
-add_library (${PROJECT_NAME} binarystore.c textstore.c filestream.c memstream.c ${LIB_HDR})
+add_library (storage binarystore.c textstore.c filestream.c memstream.c ${LIB_HDR})
 
 INCLUDE_DIRECTORIES (${CUTEST_INCLUDE_DIR})
 

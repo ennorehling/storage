@@ -4,7 +4,7 @@ ifndef CUTEST
 CUTEST = ../cutest
 endif
 
-CFLAGS += -Wall -O3
+CFLAGS += -Wall -g
 INCLUDES = -I. -I$(CUTEST)
 
 all: tests
@@ -15,8 +15,9 @@ bin:
 tests: bin/tests
 	@bin/tests
 
-bin/tests: tests.c \
-storage.test.c stream.test.c stream.h filestream.h memstream.h filestream.c memstream.c binarystore.c textstore.c \
+bin/tests: tests.c storage.test.c stream.test.c \
+  stream.h filestream.h memstream.h filestream.c memstream.c \
+  storage.h binarystore.h binarystore.c textstore.h textstore.c \
 $(CUTEST)/CuTest.c | bin
 	$(CC) $(CFLAGS) $(INCLUDES) -lm -o $@ $^
 

@@ -1,4 +1,5 @@
 #include "textstore.h"
+#include "storage.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -12,29 +13,29 @@
 
 static int txt_w_brk(HSTORAGE store)
 {
-  putc('\n', (FILE *) store);
+  putc('\n', (FILE *) store.data);
   return 1;
 }
 
 static int txt_w_int(HSTORAGE store, int arg)
 {
-  return fprintf((FILE *) store, "%d ", arg);
+  return fprintf((FILE *) store.data, "%d ", arg);
 }
 
 static int txt_r_int(HSTORAGE store, int * result)
 {
-  int err = fscanf((FILE *) store, "%d", result);
+  int err = fscanf((FILE *) store.data, "%d", result);
   return (err==1) ? 0 : EOF;
 }
 
 static int txt_w_flt(HSTORAGE store, float arg)
 {
-  return fprintf((FILE *) store, "%f ", arg);
+  return fprintf((FILE *) store.data, "%f ", arg);
 }
 
 static int txt_r_flt(HSTORAGE store, float * result)
 {
-  int err = fscanf((FILE *) store, "%f", result);
+  int err = fscanf((FILE *) store.data, "%f", result);
   return (err==1) ? 0 : EOF;
 }
 
@@ -42,7 +43,7 @@ static int txt_w_tok(HSTORAGE store, const char *tok)
 {
   int result;
   if (tok == NULL || tok[0] == 0) {
-    result = fputc(NULL_TOKEN, (FILE *) store);
+    result = fputc(NULL_TOKEN, (FILE *) store.data);
   } else {
 #ifndef NDEBUG
     const char *find = strchr(tok, ' ');
@@ -51,9 +52,9 @@ static int txt_w_tok(HSTORAGE store, const char *tok)
     assert(!find || !"reserved character in token");
     assert(tok[0] != ' ');
 #endif
-    result = fputs(tok, (FILE *) store);
+    result = fputs(tok, (FILE *) store.data);
   }
-  fputc(' ', (FILE *) store);
+  fputc(' ', (FILE *) store.data);
   return result;
 }
 
@@ -63,7 +64,7 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
   if (result && size > 0) {
     format[0] = '%';
     sprintf(format + 1, "%us", size);
-    if (fscanf((FILE *) store, format, result)!=1) {
+    if (fscanf((FILE *) store.data, format, result)!=1) {
       return EOF;
     }
     if (result[0] == NULL_TOKEN) {
@@ -71,7 +72,7 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
     }
   } else {
     /* trick to skip when no result expected */
-    return fscanf((FILE *) store, "%*s");
+    return fscanf((FILE *) store.data, "%*s");
   }
   return 0;
 }
@@ -161,14 +162,14 @@ static int fwritestr(FILE * F, const char *str)
 
 static int txt_w_str(HSTORAGE store, const char *str)
 {
-  int result = fwritestr((FILE *) store, str);
-  fputc(' ', (FILE *) store);
+  int result = fwritestr((FILE *) store.data, str);
+  fputc(' ', (FILE *) store.data);
   return result + 1;
 }
 
 static int txt_r_str_buf(HSTORAGE store, char *result, size_t size)
 {
-  freadstr((FILE *) store, result, size);
+  freadstr((FILE *) store.data, result, size);
   return 0;
 }
 
@@ -184,22 +185,21 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t size)
   return 0;
 }
 
-static HSTORAGE txt_open(FILE * F, int mode)
-{
-  return (HSTORAGE)F;
-}
-
-static int txt_close(HSTORAGE store)
-{
-  return 0;
-}
-
-const storage text_store = {
+const storage_i text_api = {
   txt_w_brk,
   txt_w_int, txt_r_int,
   txt_w_flt, txt_r_flt,
   txt_w_tok, txt_r_tok_buf,
   txt_w_str, txt_r_str_buf,
   txt_w_bin, txt_r_bin,
-  txt_open, txt_close
 };
+
+void txtstore_init(struct storage * store, FILE *F) {
+  store->api = &text_api;
+  store->handle.data = F;
+}
+
+void txtstore_done(struct storage * store) {
+  assert(store->api==&text_api);
+  fclose((FILE *)store->handle.data);
+}

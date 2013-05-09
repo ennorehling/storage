@@ -6,7 +6,9 @@ extern "C" {
 
 #include "storage.h"
 
-  extern const storage binary_store;
+struct storage;
+void binstore_init(struct storage * store, FILE * F);
+void binstore_done(struct storage * store);
 
 #ifdef __cplusplus
 }

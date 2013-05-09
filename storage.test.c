@@ -7,84 +7,79 @@
 #include <float.h>
 #include <string.h>
 
-static void test_open_close(CuTest * tc, const storage * api)
-{
-  FILE * F;
-  HSTORAGE store;
-  
-  F = fopen("test.dat", "wb");
-  store = api->begin(F, IO_WRITE);
-  CuAssertPtrNotNull(tc, store);
-  CuAssertIntEquals(tc, 0, api->end(store));
-  fclose(F);
+typedef struct factory {
+  void (*open)(storage *, const char * filename, int);
+  void (*close)(storage *);
+} factory;
 
-  F = fopen("test.dat", "rb");
-  store = api->begin(F, IO_READ);
-  CuAssertPtrNotNull(tc, store);
-  CuAssertIntEquals(tc, 0, api->end(store));
-  fclose(F);
-
-  remove("test.dat");
+static void bin_open(storage * store, const char * filename, int mode) {
+  const char *modes[] = { 0, "rb", "wb", "wb+" };
+  FILE * F = fopen(filename, modes[mode]);
+  binstore_init(store, F);
 }
+static void bin_close(storage * store) {
+  binstore_done(store);
+}
+static factory bin_factory = {
+  bin_open, bin_close
+};
 
-static void test_read_write(CuTest * tc, const storage * api)
+static void txt_open(storage * store, const char * filename, int mode) {
+  const char *modes[] = { 0, "rb", "wb", "wb+" };
+  FILE * F = fopen(filename, modes[mode]);
+  txtstore_init(store, F);
+}
+static void txt_close(storage * store) {
+  txtstore_done(store);
+}
+static factory txt_factory = {
+  txt_open, txt_close
+};
+
+static void test_read_write(CuTest * tc, factory * fac)
 {
-  FILE * F;
-  HSTORAGE store;
+  const char * filename = "test.dat";
+  storage store;
   char buffer[32];
   int i;
   float f;
-  
-  F = fopen("test.dat", "wb");
-  store = api->begin(F, IO_WRITE);
-  CuAssertPtrNotNull(tc, store);
-  CuAssertTrue(tc, api->w_int(store, 42)>0);
-  CuAssertTrue(tc, api->w_flt(store, FLT_MAX)>0);
-  CuAssertTrue(tc, api->w_brk(store)>=0);
-  CuAssertTrue(tc, api->w_str(store, "Hello World")>0);
-  CuAssertTrue(tc, api->w_tok(store, "gazebo")>=0);
-  CuAssertIntEquals(tc, 0, api->end(store));
-  fclose(F);
 
-  F = fopen("test.dat", "rb");
-  store = api->begin(F, IO_READ);
-  CuAssertPtrNotNull(tc, store);
+  fac->open(&store, filename, IO_WRITE);
+  CuAssertPtrNotNull(tc, store.handle.data);
+  CuAssertTrue(tc, store.api->w_int(store.handle, 42)>0);
+  CuAssertTrue(tc, store.api->w_flt(store.handle, FLT_MAX)>0);
+  CuAssertTrue(tc, store.api->w_brk(store.handle)>=0);
+  CuAssertTrue(tc, store.api->w_str(store.handle, "Hello World")>0);
+  CuAssertTrue(tc, store.api->w_tok(store.handle, "gazebo")>=0);
+  fac->close(&store);
 
-  CuAssertIntEquals(tc, 0, api->r_int(store, &i));
+  fac->open(&store, filename, IO_READ);
+  CuAssertPtrNotNull(tc, store.handle.data);
+
+  CuAssertIntEquals(tc, 0, store.api->r_int(store.handle, &i));
   CuAssertIntEquals(tc, 42, i);
 
-  CuAssertIntEquals(tc, 0, api->r_flt(store, &f));
+  CuAssertIntEquals(tc, 0, store.api->r_flt(store.handle, &f));
   CuAssertDblEquals(tc, FLT_MAX, f, FLT_MIN);
-  CuAssertIntEquals(tc, 0, api->r_str(store, buffer, 32));
+  CuAssertIntEquals(tc, 0, store.api->r_str(store.handle, buffer, 32));
   CuAssertStrEquals(tc, "Hello World", buffer);
-  CuAssertIntEquals(tc, 0, api->r_tok(store, buffer, 32));
+  CuAssertIntEquals(tc, 0, store.api->r_tok(store.handle, buffer, 32));
   CuAssertStrEquals(tc, "gazebo", buffer);
-  CuAssertIntEquals(tc, 0, api->end(store));
-  fclose(F);
+  fac->close(&store);
 
-  remove("test.dat");
-}
-
-static void test_open_close_bin(CuTest * tc) {
-  test_open_close(tc, &binary_store);
-}
-
-static void test_open_close_txt(CuTest * tc) {
-  test_open_close(tc, &text_store);
+  remove(filename);
 }
 
 static void test_read_write_bin(CuTest * tc) {
-  test_read_write(tc, &binary_store);
+  test_read_write(tc, &bin_factory);
 }
 
 static void test_read_write_txt(CuTest * tc) {
-  test_read_write(tc, &text_store);
+  test_read_write(tc, &txt_factory);
 }
 
 void add_suite_storage(CuSuite *suite)
 {
-  SUITE_ADD_TEST(suite, test_open_close_bin);
   SUITE_ADD_TEST(suite, test_read_write_bin);
-  SUITE_ADD_TEST(suite, test_open_close_txt);
   SUITE_ADD_TEST(suite, test_read_write_txt);
 }

@@ -8,9 +8,11 @@
 extern "C" {
 #endif
 
-  typedef void* HSTORAGE;
+  typedef struct HSTORAGE {
+    void* data;
+  } HSTORAGE;
 
-  typedef struct storage {
+  typedef struct storage_i {
     /* separator for readable files: */
     int (*w_brk) (HSTORAGE store);
     /* integer values: */
@@ -28,10 +30,13 @@ extern "C" {
     /* binary data: */
     int (*w_bin) (HSTORAGE store, void *arg, size_t size);
     int (*r_bin) (HSTORAGE store, void *result, size_t size);
-
-    HSTORAGE (*begin) (FILE * F, int mode);
-    int (*end) (HSTORAGE store);
+  } storage_i;
+  
+  typedef struct storage {
+    const struct storage_i * api;
+    HSTORAGE handle;
   } storage;
+
 
 #define IO_READ 0x01
 #define IO_WRITE 0x02

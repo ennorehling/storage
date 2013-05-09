@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define file(store) (FILE *)(store)
+#define file(hstore) (FILE *)(hstore.data)
 
 #define STREAM_VERSION 2
 
@@ -65,26 +65,26 @@ static int bin_w_brk(HSTORAGE store)
   return 0;
 }
 
-static int bin_w_int_pak(HSTORAGE store, int arg)
+static int bin_w_int_pak(HSTORAGE hstore, int arg)
 {
   char buffer[5];
   size_t size = pack_int(arg, buffer);
-  return (int)fwrite(buffer, sizeof(char), size, file(store));
+  return (int)fwrite(buffer, sizeof(char), size, file(hstore));
 }
 
-static int bin_r_int_pak(HSTORAGE store, int * result)
+static int bin_r_int_pak(HSTORAGE hstore, int * result)
 {
   int v = 0;
   size_t items;
   char ch;
 
-  items = fread(&ch, sizeof(char), 1, file(store));
+  items = fread(&ch, sizeof(char), 1, file(hstore));
   if (items!=1) {
     return EOF;
   }
   while (ch & 0x80) {
     v = (v << 7) | (ch & 0x7f);
-    items = fread(&ch, sizeof(char), 1, file(store));
+    items = fread(&ch, sizeof(char), 1, file(hstore));
     if (items!=1) {
       return EOF;
     }
@@ -98,38 +98,38 @@ static int bin_r_int_pak(HSTORAGE store, int * result)
   return 0;
 }
 
-static int bin_w_flt(HSTORAGE store, float arg)
+static int bin_w_flt(HSTORAGE hstore, float arg)
 {
-  return (int)fwrite(&arg, sizeof(arg), 1, file(store));
+  return (int)fwrite(&arg, sizeof(arg), 1, file(hstore));
 }
 
-static int bin_r_flt(HSTORAGE store, float * result)
+static int bin_r_flt(HSTORAGE hstore, float * result)
 {
   size_t items;
   
-  items = fread(result, sizeof(float), 1, file(store));
+  items = fread(result, sizeof(float), 1, file(hstore));
   return (items==1) ? 0 : EOF;
 }
 
-static int bin_w_str(HSTORAGE store, const char *tok)
+static int bin_w_str(HSTORAGE hstore, const char *tok)
 {
   int result;
   if (tok == NULL || tok[0] == 0) {
-    result = bin_w_int_pak(store, 0);
+    result = bin_w_int_pak(hstore, 0);
   } else {
     int size = (int)strlen(tok);
-    result = bin_w_int_pak(store, size);
-    result += (int)fwrite(tok, size, 1, file(store));
+    result = bin_w_int_pak(hstore, size);
+    result += (int)fwrite(tok, size, 1, file(hstore));
   }
   return result;
 }
 
-static int bin_r_str_buf(HSTORAGE store, char *result, size_t size)
+static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
 {
   int i, err;
   size_t rd, len, items;
 
-  err = bin_r_int_pak(store, &i);
+  err = bin_r_int_pak(hstore, &i);
   if (err!=0) {
     return err;
   }
@@ -138,12 +138,12 @@ static int bin_r_str_buf(HSTORAGE store, char *result, size_t size)
   } else {
     len = (size_t) i;
     rd = (len<size) ? len : (size - 1);
-    items = fread(result, sizeof(char), rd, file(store));
+    items = fread(result, sizeof(char), rd, file(hstore));
     if (items!=rd) {
       return EOF;
     }
     else if (rd < len) {
-      err = fseek(file(store), (long)(len - rd), SEEK_CUR);
+      err = fseek(file(hstore), (long)(len - rd), SEEK_CUR);
       if (err) {
         return err;
       }
@@ -156,40 +156,40 @@ static int bin_r_str_buf(HSTORAGE store, char *result, size_t size)
   return 0;
 }
 
-static int bin_w_bin(HSTORAGE store, void *arg, size_t size)
+static int bin_w_bin(HSTORAGE hstore, void *arg, size_t size)
 {
   int result;
   int len = (int)size;
 
-  result = bin_w_int_pak(store, len);
+  result = bin_w_int_pak(hstore, len);
   if (len > 0) {
-    result += (int)fwrite(arg, len, 1, file(store));
+    result += (int)fwrite(arg, len, 1, file(hstore));
   }
   return result;
 }
 
-static int bin_r_bin(HSTORAGE store, void *result, size_t size)
+static int bin_r_bin(HSTORAGE hstore, void *result, size_t size)
 {
   size_t items;
   int len, err;
   
-  err = bin_r_int_pak(store, &len);
+  err = bin_r_int_pak(hstore, &len);
   if (err!=0) {
     return err;
   }
   if (len > 0) {
     if ((size_t) len > size) {
       /* "destination buffer too small */
-      fseek(file(store), len, SEEK_CUR);
+      fseek(file(hstore), len, SEEK_CUR);
       return ENOMEM;
     } else {
-      items = fread(result, len, 1, file(store));
+      items = fread(result, len, 1, file(hstore));
       return (items==1) ? 0 : EOF;
     }
   }
   return EILSEQ;
 }
-
+/*
 static HSTORAGE bin_open(FILE * F, int mode)
 {
   return (HSTORAGE)F;
@@ -199,13 +199,23 @@ static int bin_close(HSTORAGE store)
 {
   return 0;
 }
-
-const storage binary_store = {
+*/
+const storage_i binary_api = {
   bin_w_brk,                    /* newline (ignore) */
   bin_w_int_pak, bin_r_int_pak, /* int storage */
   bin_w_flt, bin_r_flt,         /* float storage */
   bin_w_str, bin_r_str_buf,     /* token storage */
   bin_w_str, bin_r_str_buf,     /* string storage */
   bin_w_bin, bin_r_bin,         /* binary storage */
-  bin_open, bin_close
+/*  bin_open, bin_close */
 };
+
+void binstore_init(struct storage * store, FILE * F) {
+  store->api = &binary_api;
+  store->handle.data = F;
+}
+
+void binstore_done(struct storage * store) {
+  assert(store->api==&binary_api);
+  fclose((FILE *)store->handle.data);
+}
