@@ -1,3 +1,0 @@
-storage:
-    An improvement over flat text files for simple serialization of data.
-    Also, an experiment in writing interfaces in C.
