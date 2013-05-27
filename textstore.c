@@ -173,16 +173,41 @@ static int txt_r_str_buf(HSTORAGE store, char *result, size_t size)
   return 0;
 }
 
-static int txt_w_bin(HSTORAGE store, void *arg, size_t size)
+static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
 {
-  assert(!"not implemented!");
-  return 0;
+  int bytes;
+  
+  bytes = fprintf((FILE *) store.data, "%Id ", size);
+  if (bytes>0 && size>0) {
+	  size_t i;
+	  const unsigned char * buf = (const unsigned char *)arg;
+	  for (i=0;i!=size;++i) {
+		  int b = fprintf((FILE *) store.data, "%02x", buf[i]);
+		  if (b<0) return b;
+		  bytes += b;
+	  }
+  }
+  return bytes;
 }
 
-static int txt_r_bin(HSTORAGE store, void *result, size_t size)
+static int txt_r_bin(HSTORAGE store, void *result, size_t len)
 {
-  assert(!"not implemented!");
-  return 0;
+  int bytes;
+  size_t size;
+  
+  bytes = fscanf((FILE *) store.data, "%Id ", &size);
+  if (bytes>0 && size>0) {
+	  size_t i;
+	  unsigned char * buf = (unsigned char *)result;
+	  for (i=0;i!=size;++i) {
+		  unsigned char uc;
+		  int b = fscanf((FILE *) store.data, "%02x", &uc);
+		  if (b<0) return b;
+		  if (i<len) buf[i] = uc;
+		  bytes += b;
+	  }
+  }
+  return bytes;
 }
 
 const storage_i text_api = {

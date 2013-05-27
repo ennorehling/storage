@@ -62,7 +62,7 @@ static int unpack_int(const char *buffer)
 */
 static int bin_w_brk(HSTORAGE store)
 {
-  return 0;
+  return store.data ? 0 : -1;
 }
 
 static int bin_w_int_pak(HSTORAGE hstore, int arg)
@@ -156,7 +156,7 @@ static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
   return 0;
 }
 
-static int bin_w_bin(HSTORAGE hstore, void *arg, size_t size)
+static int bin_w_bin(HSTORAGE hstore, const void *arg, size_t size)
 {
   int result;
   int len = (int)size;

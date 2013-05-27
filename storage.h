@@ -28,7 +28,7 @@ extern "C" {
     int (*w_str) (HSTORAGE store, const char *tok);
     int (*r_str) (HSTORAGE store, char *result, size_t size);
     /* binary data: */
-    int (*w_bin) (HSTORAGE store, void *arg, size_t size);
+    int (*w_bin) (HSTORAGE store, const void *arg, size_t size);
     int (*r_bin) (HSTORAGE store, void *result, size_t size);
   } storage_i;
   

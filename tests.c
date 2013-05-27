@@ -5,7 +5,7 @@
 void add_suite_storage(CuSuite *suite);
 void add_suite_stream(CuSuite *suite);
 
-int main(int argc, char ** argv)
+int main(void)
 {
   CuString *output = CuStringNew();
   CuSuite *suite = CuSuiteNew();
