@@ -200,10 +200,10 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t len)
 	  size_t i;
 	  unsigned char * buf = (unsigned char *)result;
 	  for (i=0;i!=size;++i) {
-		  unsigned char uc;
+		  unsigned int uc;
 		  int b = fscanf((FILE *) store.data, "%02x", &uc);
 		  if (b<0) return b;
-		  if (i<len) buf[i] = uc;
+		  if (i<len) buf[i] = (unsigned char)uc;
 		  bytes += b;
 	  }
   }

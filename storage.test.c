@@ -13,7 +13,7 @@ typedef struct factory {
 } factory;
 
 static void bin_open(storage * store, const char * filename, int mode) {
-  const char *modes[] = { 0, "rb", "wb", "wb+" };
+  const char *modes[] = { "r", "rb", "wb", "wb+" };
   FILE * F = fopen(filename, modes[mode]);
   binstore_init(store, F);
 }
@@ -25,7 +25,7 @@ static factory bin_factory = {
 };
 
 static void txt_open(storage * store, const char * filename, int mode) {
-  const char *modes[] = { 0, "rb", "wb", "wb+" };
+  const char *modes[] = { "r", "rb", "wb", "wb+" };
   FILE * F = fopen(filename, modes[mode]);
   txtstore_init(store, F);
 }

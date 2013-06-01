@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 typedef struct strlist {
     struct strlist * next;
@@ -40,16 +41,17 @@ static int ms_writeln(HSTREAM s, const char * out) {
     memstream * ms = (memstream *)s.data;
     strlist ** ptr = ms->pos;
     strlist * list = (strlist *)malloc(sizeof(strlist));
+    if (list) {
+        list->next = 0;
+        list->str = (char *)malloc(strlen(out)+1);
+        strcpy(list->str, out);
 
-    list->next = 0;
-    list->str = (char *)malloc(strlen(out)+1);
-    strcpy(list->str, out);
-
-    free_strlist(ptr);
-    *ptr = list;
-    ms->pos = &list->next;
-
-    return 0;
+        free_strlist(ptr);
+        *ptr = list;
+        ms->pos = &list->next;
+        return 0;
+    }
+    return ENOMEM;
 }
         
 static void ms_rewind(HSTREAM s) {
@@ -65,11 +67,12 @@ static const stream_i api = {
 
 void mstream_init(struct stream * strm) {
     memstream * ms = (memstream *)malloc(sizeof(memstream));
-
-    ms->ptr = 0;
-    ms->pos = &ms->ptr;
-    strm->api = &api;
-    strm->handle.data = ms;
+    if (ms) {
+        ms->ptr = 0;
+        ms->pos = &ms->ptr;
+        strm->api = &api;
+        strm->handle.data = ms;
+    }
 }
 
 void mstream_done(struct stream * strm)
