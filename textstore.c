@@ -197,23 +197,15 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t len)
   
   bytes = fscanf((FILE *) store.data, "%zu ", &size);
   if (bytes>0 && size>0) {
-	  size_t i;
-	  unsigned char * buf = (unsigned char *)result;
-	  for (i=0;i!=size;++i) {
-<<<<<<< Updated upstream
-		  unsigned int uc;
-		  int b = fscanf((FILE *) store.data, "%02x", &uc);
-=======
-		  unsigned int ui;
-      unsigned char uc;
-		  int b = fscanf((FILE *) store.data, "%02x", &ui);
-
-      uc = (unsigned char)ui;
->>>>>>> Stashed changes
-		  if (b<0) return b;
-		  if (i<len) buf[i] = (unsigned char)uc;
-		  bytes += b;
-	  }
+    size_t i;
+    unsigned char * buf = (unsigned char *)result;
+    for (i=0;i!=size;++i) {
+      unsigned int uc;
+      int b = fscanf((FILE *) store.data, "%02x", &uc);
+      if (b<0) return b;
+      if (i<len) buf[i] = (unsigned char)uc;
+      bytes += b;
+    }
   }
   return bytes;
 }
