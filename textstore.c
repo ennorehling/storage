@@ -63,7 +63,7 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
   char format[16];
   if (result && size > 0) {
     format[0] = '%';
-    sprintf(format + 1, "%us", size);
+    sprintf(format + 1, "%zus", size);
     if (fscanf((FILE *) store.data, format, result)!=1) {
       return EOF;
     }
@@ -177,7 +177,7 @@ static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
 {
   int bytes;
   
-  bytes = fprintf((FILE *) store.data, "%Id ", size);
+  bytes = fprintf((FILE *) store.data, "%zu ", size);
   if (bytes>0 && size>0) {
 	  size_t i;
 	  const unsigned char * buf = (const unsigned char *)arg;
@@ -195,13 +195,21 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t len)
   int bytes;
   size_t size;
   
-  bytes = fscanf((FILE *) store.data, "%Id ", &size);
+  bytes = fscanf((FILE *) store.data, "%zu ", &size);
   if (bytes>0 && size>0) {
 	  size_t i;
 	  unsigned char * buf = (unsigned char *)result;
 	  for (i=0;i!=size;++i) {
+<<<<<<< Updated upstream
 		  unsigned int uc;
 		  int b = fscanf((FILE *) store.data, "%02x", &uc);
+=======
+		  unsigned int ui;
+      unsigned char uc;
+		  int b = fscanf((FILE *) store.data, "%02x", &ui);
+
+      uc = (unsigned char)ui;
+>>>>>>> Stashed changes
 		  if (b<0) return b;
 		  if (i<len) buf[i] = (unsigned char)uc;
 		  bytes += b;
