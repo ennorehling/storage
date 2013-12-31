@@ -24,7 +24,7 @@ static int txt_w_int(HSTORAGE store, int arg)
 
 static int txt_r_int(HSTORAGE store, int * result)
 {
-  int err = fscanf((FILE *) store.data, "%d", result);
+  int n, err = fscanf((FILE *) store.data, "%d", result ? result : &n);
   return (err==1) ? 0 : EOF;
 }
 
@@ -35,7 +35,8 @@ static int txt_w_flt(HSTORAGE store, float arg)
 
 static int txt_r_flt(HSTORAGE store, float * result)
 {
-  int err = fscanf((FILE *) store.data, "%f", result);
+  float flt;
+  int err = fscanf((FILE *) store.data, "%f", result ? result : &flt);
   return (err==1) ? 0 : EOF;
 }
 

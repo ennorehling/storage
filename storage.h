@@ -38,8 +38,16 @@ extern "C" {
   } storage;
 
 
-#define IO_READ 0x01
-#define IO_WRITE 0x02
+  /* convenience macros */
+#define WRITE_SECTION(store) (store)->api->w_brk((store)->handle)
+#define READ_STR(store, charptr, size) (store)->api->r_str((store)->handle, charptr, size)
+#define WRITE_STR(store, str) (store)->api->w_str((store)->handle, str)
+#define READ_TOK(store, charptr, size) (store)->api->r_str((store)->handle, charptr, size)
+#define WRITE_TOK(store, str) (store)->api->w_tok((store)->handle, str)
+#define READ_INT(store, intptr) (store)->api->r_int((store)->handle, intptr)
+#define WRITE_INT(store, num) (store)->api->w_int((store)->handle, num)
+#define READ_FLT(store, intptr) (store)->api->r_flt((store)->handle, intptr)
+#define WRITE_FLT(store, num) (store)->api->w_flt((store)->handle, num)
 
 #ifdef __cplusplus
 }

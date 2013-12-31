@@ -12,6 +12,9 @@ typedef struct factory {
   void (*close)(storage *);
 } factory;
 
+#define IO_READ 0x01
+#define IO_WRITE 0x02
+
 static void bin_open(storage * store, const char * filename, int mode) {
   const char *modes[] = { "r", "rb", "wb", "wb+" };
   FILE * F = fopen(filename, modes[mode]);

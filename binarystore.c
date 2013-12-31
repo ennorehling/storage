@@ -8,8 +8,6 @@
 
 #define file(hstore) (FILE *)(hstore.data)
 
-#define STREAM_VERSION 2
-
 static size_t pack_int(int v, char *buffer)
 {
   int sign = (v < 0);
@@ -89,12 +87,14 @@ static int bin_r_int_pak(HSTORAGE hstore, int * result)
       return EOF;
     }
   }
-  v = (v << 6) | (ch & 0x3f);
+  if (result) {
+    v = (v << 6) | (ch & 0x3f);
 
-  if (ch & 0x40) {
-    v = ~v + 1;
+    if (ch & 0x40) {
+      v = ~v + 1;
+    }
+    *result = v;
   }
-  *result = v;
   return 0;
 }
 
@@ -106,8 +106,9 @@ static int bin_w_flt(HSTORAGE hstore, float arg)
 static int bin_r_flt(HSTORAGE hstore, float * result)
 {
   size_t items;
+  float flt;
   
-  items = fread(result, sizeof(float), 1, file(hstore));
+  items = fread(result ? result : &flt, sizeof(float), 1, file(hstore));
   return (items==1) ? 0 : EOF;
 }
 
