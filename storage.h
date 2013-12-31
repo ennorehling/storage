@@ -45,6 +45,7 @@ extern "C" {
 #define READ_TOK(store, charptr, size) (store)->api->r_str((store)->handle, charptr, size)
 #define WRITE_TOK(store, str) (store)->api->w_tok((store)->handle, str)
 #define READ_INT(store, intptr) (store)->api->r_int((store)->handle, intptr)
+#define READ_UINT(store, intptr) (store)->api->r_int((store)->handle, (int *)intptr)
 #define WRITE_INT(store, num) (store)->api->w_int((store)->handle, num)
 #define READ_FLT(store, intptr) (store)->api->r_flt((store)->handle, intptr)
 #define WRITE_FLT(store, num) (store)->api->w_flt((store)->handle, num)
