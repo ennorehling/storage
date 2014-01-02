@@ -128,7 +128,6 @@ static int bin_w_str(HSTORAGE hstore, const char *tok)
 static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
 {
   int i, err;
-  size_t rd, len, items;
 
   err = bin_r_int_pak(hstore, &i);
   if (err!=0) {
@@ -136,25 +135,33 @@ static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
   }
   if (i == 0) {
     result[0] = 0;
-  } else {
-    len = (size_t) i;
-    rd = (len<size) ? len : (size - 1);
+  }
+  else if (size > 0) {
+    size_t rd, len, items;
+    len = (size_t)i;
+    rd = (len < size) ? len : (size - 1);
     items = fread(result, sizeof(char), rd, file(hstore));
     if (items!=rd) {
       return EOF;
     }
-    else if (rd < len) {
-      err = fseek(file(hstore), (long)(len - rd), SEEK_CUR);
-      if (err) {
-        return err;
+    else {
+      if (rd < len) {
+        err = fseek(file(hstore), (long)(len - rd), SEEK_CUR);
+        if (err) {
+          return err;
+        }
+        result[size - 1] = 0;
+        return ENOMEM;
       }
-      result[size - 1] = 0;
-      return ENOMEM;
-    } else {
-      result[len] = 0;
+      else {
+        result[len] = 0;
+      }
     }
   }
-  return 0;
+  else {
+    err = fseek(file(hstore), (long)i, SEEK_CUR);
+  }
+  return err;
 }
 
 static int bin_w_bin(HSTORAGE hstore, const void *arg, size_t size)
