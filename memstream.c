@@ -37,6 +37,25 @@ static int ms_readln(HSTREAM s, char * out, size_t outlen) {
     return 0;
 }
 
+static size_t ms_read(HSTREAM s, char * out, size_t outlen) {
+    memstream * ms = (memstream *)s.data;
+    char * start = out;
+
+    while (*ms->pos && outlen>0) {
+        strlist * list = *ms->pos;
+        size_t bytes = strlen(list->str);
+
+        strncpy(out, list->str, outlen);
+        if (outlen < bytes) bytes = outlen;
+        else out[bytes++] = '\n';
+        out += bytes;
+        outlen -= bytes;
+        ms->pos = &list->next;
+    }
+    if (outlen) *out = 0;
+    return out-start;
+}
+
 static int ms_writeln(HSTREAM s, const char * out) {
     memstream * ms = (memstream *)s.data;
     strlist ** ptr = ms->pos;
@@ -62,6 +81,7 @@ static void ms_rewind(HSTREAM s) {
 static const stream_i api = {
     ms_writeln,
     ms_readln,
+    ms_read,
     ms_rewind
 };
 

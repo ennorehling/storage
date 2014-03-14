@@ -63,8 +63,7 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
 {
   char format[16];
   if (result && size > 0) {
-    format[0] = '%';
-    sprintf(format + 1, "%zus", size);
+    _snprintf(format, sizeof(format), "%%%lus", (unsigned long)size);
     if (fscanf((FILE *) store.data, format, result)!=1) {
       return EOF;
     }
