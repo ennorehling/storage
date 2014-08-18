@@ -11,6 +11,14 @@
 #define NULL_TOKEN '@'
 #define isxspace(c) (c==160 || isspace(c))
 
+#if defined(WIN64)
+#define PR_SIZET "I"
+#elif defined(WIN32)
+#define PR_SIZET ""
+#else
+#define PR_SIZET "z"
+#endif
+
 static int txt_w_brk(HSTORAGE store)
 {
   putc('\n', (FILE *) store.data);
@@ -63,8 +71,8 @@ static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
 {
   char format[16];
   if (result && size > 0) {
-    format[0] = '%';
-    sprintf(format + 1, "%zus", size);
+    _snprintf(format, sizeof(format), "%%%lus", (unsigned long)size);
+    format[sizeof(format) - 1] = 0;
     if (fscanf((FILE *) store.data, format, result)!=1) {
       return EOF;
     }
@@ -178,7 +186,7 @@ static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
 {
   int bytes;
   
-  bytes = fprintf((FILE *) store.data, "%zu ", size);
+  bytes = fprintf((FILE *)store.data, "%" PR_SIZET "u ", size);
   if (bytes>0 && size>0) {
 	  size_t i;
 	  const unsigned char * buf = (const unsigned char *)arg;
@@ -196,7 +204,7 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t len)
   int bytes;
   size_t size;
   
-  bytes = fscanf((FILE *) store.data, "%zu ", &size);
+  bytes = fscanf((FILE *)store.data, "%" PR_SIZET "u ", &size);
   if (bytes>0 && size>0) {
     size_t i;
     unsigned char * buf = (unsigned char *)result;
