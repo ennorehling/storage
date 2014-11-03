@@ -51,6 +51,7 @@ static void test_read_file(CuTest * tc) {
     fstream_init(&strm, fopen("test.txt", "w+b"));
     test_read(tc, &strm);
     fstream_done(&strm);
+    remove("test.txt");
 }
 
 static void test_readln_memory(CuTest * tc) {
@@ -67,6 +68,7 @@ static void test_readln_file(CuTest * tc) {
     fstream_init(&strm, fopen("test.txt", "w+b"));
     test_readln(tc, &strm);
     fstream_done(&strm);
+    remove("test.txt");
 }
 
 void add_suite_stream(CuSuite *suite)

@@ -1,18 +1,21 @@
 # I am not very good at Makefiles.
 
-ifndef CUTEST
+ifeq (,$(wildcard ../cutest))
+CUTEST=.
+else
 CUTEST = ../cutest
+INCLUDES += -I../cutest
 endif
 
 CFLAGS += -Wall -g
 INCLUDES = -I. -I$(CUTEST)
 
-all: tests
+all: bin/tests
 
 bin:
 	mkdir -p $@
 
-tests: bin/tests
+test: bin/tests
 	@bin/tests
 
 bin/tests: tests.c storage.test.c stream.test.c \
