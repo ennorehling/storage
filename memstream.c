@@ -28,11 +28,11 @@ static int ms_readln(HSTREAM s, char * out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     strlist * list = *ms->pos;
 
-    if (list==0) {
+    if (list == 0) {
         return EOF;
     }
     strncpy(out, list->str, outlen);
-    out[outlen-1] = 0;
+    out[outlen - 1] = 0;
     ms->pos = &list->next;
     return 0;
 }
@@ -41,7 +41,7 @@ static size_t ms_read(HSTREAM s, char * out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     char * start = out;
 
-    while (*ms->pos && outlen>0) {
+    while (*ms->pos && outlen > 0) {
         strlist * list = *ms->pos;
         size_t bytes = strlen(list->str);
 
@@ -53,7 +53,7 @@ static size_t ms_read(HSTREAM s, char * out, size_t outlen) {
         ms->pos = &list->next;
     }
     if (outlen) *out = 0;
-    return out-start;
+    return out - start;
 }
 
 static int ms_writeln(HSTREAM s, const char * out) {
@@ -62,7 +62,7 @@ static int ms_writeln(HSTREAM s, const char * out) {
     strlist * list = (strlist *)malloc(sizeof(strlist));
     if (list) {
         list->next = 0;
-        list->str = (char *)malloc(strlen(out)+1);
+        list->str = (char *)malloc(strlen(out) + 1);
         strcpy(list->str, out);
 
         free_strlist(ptr);
@@ -72,7 +72,7 @@ static int ms_writeln(HSTREAM s, const char * out) {
     }
     return ENOMEM;
 }
-        
+
 static void ms_rewind(HSTREAM s) {
     memstream * ms = (memstream *)s.data;
     ms->pos = &ms->ptr;

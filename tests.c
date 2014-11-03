@@ -7,16 +7,16 @@ void add_suite_stream(CuSuite *suite);
 
 int main(void)
 {
-  CuString *output = CuStringNew();
-  CuSuite *suite = CuSuiteNew();
+    CuString *output = CuStringNew();
+    CuSuite *suite = CuSuiteNew();
 
-  add_suite_storage(suite);
-  add_suite_stream(suite);
+    add_suite_storage(suite);
+    add_suite_stream(suite);
 
-  CuSuiteRun(suite);
-  CuSuiteSummary(suite, output);
-  CuSuiteDetails(suite, output);
-  printf("%s\n", output->buffer);
-  return suite->failCount;
+    CuSuiteRun(suite);
+    CuSuiteSummary(suite, output);
+    CuSuiteDetails(suite, output);
+    printf("%s\n", output->buffer);
+    return suite->failCount;
 }
 
