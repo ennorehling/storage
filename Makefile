@@ -12,17 +12,22 @@ INCLUDES = -I. -I$(CUTEST)
 
 all: bin/tests
 
-bin:
+bin obj:
 	mkdir -p $@
+
+obj/%.o: %.c %.h | obj
+        $(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
+
+obj/test_%.o: test_%.c %.h | obj
+        $(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
 
 test: bin/tests
 	@bin/tests
 
-bin/tests: tests.c storage.test.c stream.test.c \
-  stream.h filestream.h memstream.h filestream.c memstream.c \
-  storage.h binarystore.h binarystore.c textstore.h textstore.c \
-$(CUTEST)/CuTest.c | bin
-	$(CC) $(CFLAGS) $(INCLUDES) -lm -o $@ $^
+bin/tests: obj/tests.o obj/storage.test.o obj/stream.test.o \
+  obj/filestream.o obj/memstream.o obj/binarystore.o obj/textstore.o \
+  obj/CuTest.c.o | bin
+	$(CC) $(CFLAGS) $(INCLUDES) -lm $^ -o $@
 
 clean:
 	@rm -rf *~ bin

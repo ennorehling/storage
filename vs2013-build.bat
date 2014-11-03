@@ -1,0 +1,11 @@
+@ECHO OFF
+SET VSVERSION=12
+SET SRCDIR=%CD%
+CD ..
+SET PROJECTS=%CD%
+
+CD %SRCDIR%
+mkdir build-vs%VSVERSION%
+cd build-vs%VSVERSION%
+"%ProgramFiles(x86)%\CMake\bin\cmake.exe" -G "Visual Studio %VSVERSION%" -DCMAKE_MODULE_PATH="%PROJECTS%/cmake/Modules" -DCMAKE_SUPPRESS_REGENERATION=TRUE ..
+PAUSE
