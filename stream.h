@@ -12,10 +12,11 @@ extern "C" {
     } HSTREAM;
 
     typedef struct stream_i {
-        int (*writeln)(HSTREAM s, const char * out);
-        int (*readln)(HSTREAM s, char * out, size_t outlen);
-        size_t (*read)(HSTREAM s, char * out, size_t outlen);
-        void (*rewind)(HSTREAM s);
+        int(*writeln)(HSTREAM s, const char *out);
+        int(*write)(HSTREAM s, const void *out, size_t outlen);
+        int(*readln)(HSTREAM s, char *out, size_t outlen);
+        size_t(*read)(HSTREAM s, void *out, size_t outlen);
+        void(*rewind)(HSTREAM s);
     } stream_i;
 
     typedef struct stream {
@@ -26,5 +27,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-   
+
 #endif

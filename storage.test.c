@@ -1,5 +1,7 @@
 #include "storage.h"
 #include "binarystore.h"
+#include "filestream.h"
+#include "stream.h"
 #include "textstore.h"
 
 #include <CuTest.h>
@@ -15,13 +17,19 @@ typedef struct factory {
 #define IO_READ 0x01
 #define IO_WRITE 0x02
 
+static stream strm;
+
 static void bin_open(storage * store, const char * filename, int mode) {
     const char *modes[] = { "r", "rb", "wb", "wb+" };
     FILE * F = fopen(filename, modes[mode]);
-    binstore_init(store, F);
+    
+    fstream_init(&strm, F);
+    binstore_init(store, &strm);
 }
+
 static void bin_close(storage * store) {
     binstore_done(store);
+    fstream_done(&strm);
 }
 static factory bin_factory = {
     bin_open, bin_close

@@ -73,6 +73,23 @@ static int ms_writeln(HSTREAM s, const char * out) {
     return ENOMEM;
 }
 
+static int ms_write(HSTREAM s, const char * out, size_t len) {
+    memstream * ms = (memstream *)s.data;
+    strlist ** ptr = ms->pos;
+    strlist * list = (strlist *)malloc(sizeof(strlist));
+    if (list) {
+        list->next = 0;
+        list->str = (char *)malloc(len);
+        memcpy(list->str, out, len);
+
+        free_strlist(ptr);
+        *ptr = list;
+        ms->pos = &list->next;
+        return 0;
+    }
+    return ENOMEM;
+}
+
 static void ms_rewind(HSTREAM s) {
     memstream * ms = (memstream *)s.data;
     ms->pos = &ms->ptr;
@@ -80,6 +97,7 @@ static void ms_rewind(HSTREAM s) {
 
 static const stream_i api = {
     ms_writeln,
+    ms_write,
     ms_readln,
     ms_read,
     ms_rewind

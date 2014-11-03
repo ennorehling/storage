@@ -4,10 +4,10 @@
 extern "C" {
 #endif
 
-#include "storage.h"
-
 struct storage;
-void binstore_init(struct storage * store, FILE * F);
+struct stream;
+
+void binstore_init(struct storage * store, struct stream * F);
 void binstore_done(struct storage * store);
 
 #ifdef __cplusplus
