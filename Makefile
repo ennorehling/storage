@@ -15,18 +15,18 @@ all: bin/tests
 bin obj:
 	mkdir -p $@
 
-obj/%.o: %.c %.h | obj
-        $(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
+obj/%.o: %.c | obj
+	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
 
 obj/test_%.o: test_%.c %.h | obj
-        $(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
+	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDES)
 
 test: bin/tests
 	@bin/tests
 
 bin/tests: obj/tests.o obj/storage.test.o obj/stream.test.o \
   obj/filestream.o obj/memstream.o obj/binarystore.o obj/textstore.o \
-  obj/CuTest.c.o | bin
+  obj/CuTest.o | bin
 	$(CC) $(CFLAGS) $(INCLUDES) -lm $^ -o $@
 
 clean:
