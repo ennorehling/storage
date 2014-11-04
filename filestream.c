@@ -22,9 +22,7 @@ static int fs_readln(HSTREAM s, char * out, size_t outlen) {
 
 static size_t fs_read(HSTREAM s, void * out, size_t outlen) {
     FILE * F = (FILE *)s.data;
-    char *dst= out;
     size_t result = fread(out, sizeof(char), outlen, F);
-    dst[result]=0;
     return result;
 }
 

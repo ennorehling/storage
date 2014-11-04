@@ -50,7 +50,6 @@ static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
         size_t bytes = list->len > outlen ? outlen : list->len;
 
         memcpy(dst, list->str, bytes);
-        dst[bytes]='\0';
         dst += bytes;
         outlen -= bytes;
         ms->pos = &list->next;
