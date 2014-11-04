@@ -1,13 +1,14 @@
 #include "stream.h"
 #include "memstream.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 typedef struct strlist {
     struct strlist * next;
     char * str;
+    size_t len;
 } strlist;
 
 typedef struct memstream {
@@ -24,35 +25,36 @@ static void free_strlist(strlist ** ptr) {
     }
 }
 
-static int ms_readln(HSTREAM s, char * out, size_t outlen) {
+static int ms_readln(HSTREAM s, char* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     strlist * list = *ms->pos;
+    size_t len;
 
     if (list == 0) {
         return EOF;
     }
-    strncpy(out, list->str, outlen);
-    out[outlen - 1] = 0;
+    len = (list->len > outlen ? outlen : list->len)-1;
+    memcpy(out, list->str, len);
+    out[len] = 0;
     ms->pos = &list->next;
     return 0;
 }
 
-static size_t ms_read(HSTREAM s, void* buf, size_t outlen) {
+static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
-    char *out = (char *)buf;
+    char *dst = (char *)out;
     char *start = out;
 
     while (*ms->pos && outlen > 0) {
         strlist * list = *ms->pos;
-        size_t bytes = strlen(list->str);
+        size_t bytes = list->len > outlen ? outlen : list->len;
 
-        strncpy(out, list->str, outlen);
-        if (outlen < bytes) bytes = outlen;
-        out += bytes;
+        memcpy(dst, list->str, bytes);
+        dst += bytes;
         outlen -= bytes;
         ms->pos = &list->next;
     }
-    return (char *)out - start;
+    return dst - start;
 }
 
 static int ms_writeln(HSTREAM s, const char * out) {
@@ -60,10 +62,13 @@ static int ms_writeln(HSTREAM s, const char * out) {
     strlist ** ptr = ms->pos;
     strlist * list = (strlist *)malloc(sizeof(strlist));
     if (list) {
+        size_t len = strlen(out);
         list->next = 0;
-        list->str = (char *)malloc(strlen(out) + 1);
-        strcpy(list->str, out);
-
+        list->str = (char *)malloc(len + 2);
+        memcpy(list->str, out, len);
+        list->str[len] = '\n';
+        list->str[len+1] = '\0';
+        list->len = len+1;
         free_strlist(ptr);
         *ptr = list;
         ms->pos = &list->next;
@@ -78,8 +83,10 @@ static int ms_write(HSTREAM s, const void* out, size_t len) {
     strlist * list = (strlist *)malloc(sizeof(strlist));
     if (list) {
         list->next = 0;
-        list->str = (char *)malloc(len);
+        list->len = len;
+        list->str = (char *)malloc(len+1);
         memcpy(list->str, out, len);
+        list->str[len]='\0';
 
         free_strlist(ptr);
         *ptr = list;

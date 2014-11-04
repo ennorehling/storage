@@ -17,8 +17,8 @@ static void test_read(CuTest * tc, const stream * strm) {
 
     sz = strm->api->read(strm->handle, buf, sizeof(buf));
     buf[sz] = 0;
-    CuAssertIntEquals(tc, 12, sz);
     CuAssertStrEquals(tc, "Hello\nWorld\n", buf);
+    CuAssertIntEquals(tc, 12, sz);
 }
 
 static void test_readln(CuTest * tc, const stream * strm) {
