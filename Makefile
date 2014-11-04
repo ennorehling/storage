@@ -7,7 +7,8 @@ CUTEST = ../cutest
 INCLUDES += -I../cutest
 endif
 
-CFLAGS += -Wall -g
+CFLAGS += -Wall -g -Werror -Wpointer-arith -Wno-char-subscripts
+CFLAGS += -Wno-unknown-pragmas -Wstrict-prototypes -Wno-long-long
 INCLUDES = -I. -I$(CUTEST)
 
 all: bin/tests
@@ -30,4 +31,4 @@ bin/tests: obj/tests.o obj/storage.test.o obj/stream.test.o \
 	$(CC) $(CFLAGS) $(INCLUDES) -lm $^ -o $@
 
 clean:
-	@rm -rf *~ bin
+	@rm -rf *~ bin obj

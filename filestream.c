@@ -20,7 +20,7 @@ static int fs_readln(HSTREAM s, char * out, size_t outlen) {
     return 0;
 }
 
-static size_t fs_read(HSTREAM s, char * out, size_t outlen) {
+static size_t fs_read(HSTREAM s, void * out, size_t outlen) {
     FILE * F = (FILE *)s.data;
     size_t result = fread(out, sizeof(char), outlen, F);
     return result;
@@ -39,7 +39,7 @@ static int fs_writeln(HSTREAM s, const char * out) {
     return 0;
 }
 
-static int fs_write(HSTREAM s, const char * out, size_t len) {
+static int fs_write(HSTREAM s, const void * out, size_t len) {
     FILE * F = (FILE *)s.data;
     int res = fwrite(out, 1, len, F);
     return res;
