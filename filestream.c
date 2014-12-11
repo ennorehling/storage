@@ -22,8 +22,11 @@ static int fs_readln(HSTREAM s, char * out, size_t outlen) {
 
 static size_t fs_read(HSTREAM s, void * out, size_t outlen) {
     FILE * F = (FILE *)s.data;
-    size_t result = fread(out, sizeof(char), outlen, F);
-    return result;
+    if (!out) {
+        fseek(F, outlen, SEEK_CUR);
+        return outlen;
+    }
+    return fread(out, sizeof(char), outlen, F);
 }
 
 static int fs_writeln(HSTREAM s, const char * out) {
