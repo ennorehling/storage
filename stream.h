@@ -24,6 +24,9 @@ extern "C" {
         HSTREAM handle;
     } stream;
 
+#define sputs(s, out) (out)->api->writeln((out)->handle, (s))
+#define swrite(s, size, count, out) (out)->api->write((out)->handle, (s), (size)*(count))
+
 #ifdef __cplusplus
 }
 #endif
