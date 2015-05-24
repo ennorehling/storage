@@ -42,10 +42,9 @@ static int fs_writeln(HSTREAM s, const char * out) {
     return 0;
 }
 
-static int fs_write(HSTREAM s, const void * out, size_t len) {
+static size_t fs_write(HSTREAM s, const void * out, size_t len) {
     FILE * F = (FILE *)s.data;
-    int res = fwrite(out, 1, len, F);
-    return res;
+    return fwrite(out, 1, len, F);
 }
 
 static void fs_rewind(HSTREAM s) {

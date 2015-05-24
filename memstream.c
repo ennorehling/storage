@@ -5,39 +5,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct strlist {
-    struct strlist * next;
-    char * str;
-    size_t len;
-} strlist;
+#define PAGELEN 4096
+
+typedef struct page {
+    struct page * next;
+    void * ptr;
+} page;
 
 typedef struct memstream {
-    struct strlist * ptr;
-    struct strlist ** pos;
+    struct page * pages;
+    struct page * active;
+    void * pos;
 } memstream;
 
-static void free_strlist(strlist ** ptr) {
-    while (*ptr) {
-        strlist * list = *ptr;
-        *ptr = list->next;
-        free(list->str);
-        free(list);
+static void free_pages(page ** pages) {
+    while (*pages) {
+        page * pg = *pages;
+        *pages = pg->next;
+        free(pg->ptr);
+        free(pg);
     }
-}
-
-static int ms_readln(HSTREAM s, char* out, size_t outlen) {
-    memstream * ms = (memstream *)s.data;
-    strlist * list = *ms->pos;
-    size_t len;
-
-    if (list == 0) {
-        return EOF;
-    }
-    len = (list->len > outlen ? outlen : list->len)-1;
-    memcpy(out, list->str, len);
-    out[len] = 0;
-    ms->pos = &list->next;
-    return 0;
 }
 
 static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
@@ -46,51 +33,67 @@ static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
     char *start = out;
 
     while (*ms->pos && outlen > 0) {
-        strlist * list = *ms->pos;
-        size_t bytes = list->len > outlen ? outlen : list->len;
+        page * pg = *ms->pos;
+        size_t bytes = pg->len > outlen ? outlen : pg->len;
 
-        memcpy(dst, list->str, bytes);
+        memcpy(dst, pg->ptr, bytes);
         dst += bytes;
         outlen -= bytes;
-        ms->pos = &list->next;
+        ms->pos = &pg->next;
     }
     return dst - start;
 }
 
-static int ms_writeln(HSTREAM s, const char * out) {
+static size_t ms_write(HSTREAM s, const void* out, size_t len) {
     memstream * ms = (memstream *)s.data;
-    strlist ** ptr = ms->pos;
-    strlist * list = (strlist *)malloc(sizeof(strlist));
-    if (list) {
-        size_t len = strlen(out);
-        list->next = 0;
-        list->str = (char *)malloc(len + 2);
-        memcpy(list->str, out, len);
-        list->str[len] = '\n';
-        list->str[len+1] = '\0';
-        list->len = len+1;
-        free_strlist(ptr);
-        *ptr = list;
-        ms->pos = &list->next;
-        return 0;
+    page ** ptr = ms->pos;
+    page * pg = (page *)malloc(sizeof(page));
+    if (pg) {
+        pg->next = 0;
+        pg->len = len;
+        pg->ptr = (char *)malloc(len+1);
+        memcpy(pg->ptr, out, len);
+        pg->ptr[len]='\0';
+
+        free_page(ptr);
+        *ptr = pg;
+        ms->pos = &pg->next;
+        return len;
     }
-    return ENOMEM;
+    errno = ENOMEM;
+    return 0;
 }
 
-static int ms_write(HSTREAM s, const void* out, size_t len) {
+static int ms_readln(HSTREAM s, char* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
-    strlist ** ptr = ms->pos;
-    strlist * list = (strlist *)malloc(sizeof(strlist));
-    if (list) {
-        list->next = 0;
-        list->len = len;
-        list->str = (char *)malloc(len+1);
-        memcpy(list->str, out, len);
-        list->str[len]='\0';
+    page * pg = *ms->pos;
+    size_t len;
 
-        free_strlist(ptr);
-        *ptr = list;
-        ms->pos = &list->next;
+    if (pg == 0) {
+        return EOF;
+    }
+    len = (pg->len > outlen ? outlen : pg->len) - 1;
+    memcpy(out, pg->ptr, len);
+    out[len] = 0;
+    ms->pos = &pg->next;
+    return 0;
+}
+
+static int ms_writeln(HSTREAM s, const char * out) {
+    memstream * ms = (memstream *)s.data;
+    page ** ptr = ms->pos;
+    page * pg = (page *)malloc(sizeof(page));
+    if (pg) {
+        size_t len = strlen(out);
+        pg->next = 0;
+        pg->ptr = (char *)malloc(len + 2);
+        memcpy(pg->ptr, out, len);
+        pg->ptr[len] = '\n';
+        pg->ptr[len + 1] = '\0';
+        pg->len = len + 1;
+        free_page(ptr);
+        *ptr = pg;
+        ms->pos = &pg->next;
         return 0;
     }
     return ENOMEM;
@@ -122,6 +125,6 @@ void mstream_init(struct stream * strm) {
 void mstream_done(struct stream * strm)
 {
     memstream * ms = (memstream *)strm->handle.data;
-    free_strlist(&ms->ptr);
+    free_page(&ms->ptr);
     free(ms);
 }
