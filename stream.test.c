@@ -50,6 +50,8 @@ static void test_read_write(CuTest *tc, stream *strm)
     CuAssertIntEquals(tc, '1', ch);
     CuAssertIntEquals(tc, 1, strm->api->read(strm->handle, &ch, 1));
     CuAssertIntEquals(tc, '2', ch);
+    CuAssertIntEquals(tc, 1, strm->api->read(strm->handle, &ch, 1));
+    CuAssertIntEquals(tc, '3', ch);
 }
 
 static void test_filestream(CuTest * tc) {
@@ -67,9 +69,9 @@ static void test_memstream(CuTest * tc) {
     stream strm;
 
     mstream_init(&strm);
+    test_read_write(tc, &strm);
     test_read(tc, &strm);
     test_readln(tc, &strm);
-    test_read_write(tc, &strm);
     mstream_done(&strm);
 }
 
