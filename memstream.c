@@ -32,6 +32,38 @@ static void free_page(page * pg) {
     free(pg);
 }
 
+static size_t ms_write(HSTREAM s, const void* out, size_t len) {
+    memstream * ms = (memstream *)s.data;
+    page *pg;
+    char *dst;
+    const char *src = (const char *)out;
+    size_t outlen = len;
+
+    if (!ms->pages) {
+        ms->pages = ms->active = alloc_page();
+        ms->pos = ms->active->ptr;
+    }
+    pg = ms->active;
+    dst = ms->pos;
+    while (outlen) {
+        size_t bytes = pg->ptr + PAGELEN - dst;
+        if (bytes == 0) {
+            if (!pg->next) {
+                pg->next = alloc_page();
+            }
+            pg = pg->next;
+            src = pg->ptr;
+        }
+        if (bytes > outlen) bytes = outlen;
+        memcpy(dst, src, bytes);
+        outlen -= bytes;
+        dst += bytes;
+        src += bytes;
+    }
+    ms->tail = ms->pos = dst;
+    return len - outlen;
+}
+
 static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     char *dst = (char *)out;
@@ -62,75 +94,43 @@ static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
     return dst - start;
 }
 
-static size_t ms_write(HSTREAM s, const void* out, size_t len) {
-    memstream * ms = (memstream *)s.data;
-    page *pg;
-    char *dst;
-    const char *src = (const char *)out;
-    size_t outlen = len;
-
-    if (!ms->pages) {
-        ms->pages = ms->active = alloc_page();
-        ms->pos = ms->active->ptr;
-    }
-    pg = ms->active;
-    dst = ms->pos;
-    while (outlen) {
-        size_t bytes = pg->ptr + PAGELEN - dst;
-        if (bytes==0) {
-            if (!pg->next) {
-                pg->next = alloc_page();
-            }
-            pg = pg->next;
-            src = pg->ptr;
-        }
-        if (bytes > outlen) bytes = outlen;
-        memcpy(dst, src, bytes);
-        outlen -= bytes;
-        dst += bytes;
-        src += bytes;
-    }
-    ms->tail = ms->pos = dst;
-    return len-outlen;
+static int ms_writeln(HSTREAM s, const char * out) {
+    size_t len = strlen(out);
+    size_t total;
+    total = ms_write(s, out, len);
+    total += ms_write(s, "\n", 1);
+    return total-len-1;
 }
 
 static int ms_readln(HSTREAM s, char* out, size_t outlen) {
-    /*
     memstream * ms = (memstream *)s.data;
-    page * pg = *ms->pos;
-    size_t len;
+    page * pg = ms->active;
+    char *end, *src = ms->pos;
 
-    if (pg == 0) {
-        return EOF;
-    }
-    len = (pg->len > outlen ? outlen : pg->len) - 1;
-    memcpy(out, pg->ptr, len);
-    out[len] = 0;
-    ms->pos = &pg->next;
-    */
-    return 0;
-}
+    while (outlen > 0) {
+        size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < PAGELEN) ? (ms->tail - pg->ptr) : PAGELEN;
 
-static int ms_writeln(HSTREAM s, const char * out) {
-    /*
-    memstream * ms = (memstream *)s.data;
-    page ** ptr = ms->pos;
-    page * pg = (page *)malloc(sizeof(page));
-    if (pg) {
-        size_t len = strlen(out);
-        pg->next = 0;
-        pg->ptr = (char *)malloc(len + 2);
-        memcpy(pg->ptr, out, len);
-        pg->ptr[len] = '\n';
-        pg->ptr[len + 1] = '\0';
-        pg->len = len + 1;
-        free_page(ptr);
-        *ptr = pg;
-        ms->pos = &pg->next;
-        return 0;
+        end = (char *)memchr(src, '\n', pglen - (src - pg->ptr));
+        if (!end) {
+            size_t copy = pglen - (src - pg->ptr);
+            if (copy > outlen) copy = outlen;
+            if (copy == 0) return EOF;
+            memcpy(out, src, copy);
+            outlen -= copy;
+            out += copy;
+            pg = pg->next;
+            src = ms->pos = pg->ptr;
+        }
+        else if (end > src) {
+            size_t copy = end - src;
+            if (copy > outlen) copy = outlen;
+            ms->pos = end + 1;
+            memcpy(out, src, copy);
+            out[copy] = '\0';
+            return 0;
+        }
     }
-    */
-    return ENOMEM;
+    return EOF;
 }
 
 static void ms_rewind(HSTREAM s) {
