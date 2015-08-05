@@ -107,7 +107,7 @@ static int ms_readln(HSTREAM s, char* out, size_t outlen) {
     page * pg = ms->active;
     char *end, *src = ms->pos;
 
-    while (outlen > 0) {
+    while (pg && outlen > 0) {
         size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < PAGELEN) ? (ms->tail - pg->ptr) : PAGELEN;
 
         end = (char *)memchr(src, '\n', pglen - (src - pg->ptr));
@@ -152,6 +152,7 @@ void mstream_init(struct stream * strm) {
     if (ms) {
         ms->pages = 0;
         ms->pos = 0;
+        ms->tail = 0;
         strm->api = &api;
         strm->handle.data = ms;
     }
