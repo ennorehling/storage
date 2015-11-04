@@ -89,8 +89,31 @@ static void test_read_write_txt(CuTest * tc) {
     test_read_write(tc, &txt_factory);
 }
 
+static void test_read_write_ints(CuTest * tc) {
+    const char *filename = "test.dat";
+    storage store;
+    int i;
+
+    remove(filename);
+
+    bin_open(&store, filename, IO_WRITE);
+    CuAssertIntEquals(tc, 3, WRITE_INT(&store, 355747));
+    CuAssertIntEquals(tc, 3, WRITE_INT(&store, 416957));
+    bin_close(&store);
+
+    bin_open(&store, filename, IO_READ);
+    CuAssertIntEquals(tc, 0, READ_INT(&store, &i));
+    CuAssertIntEquals(tc, 355747, i);
+    CuAssertIntEquals(tc, 0, READ_INT(&store, &i));
+    CuAssertIntEquals(tc, 416957, i);
+    bin_close(&store);
+
+    remove(filename);
+}
+
 void add_suite_storage(CuSuite *suite)
 {
     SUITE_ADD_TEST(suite, test_read_write_bin);
+    SUITE_ADD_TEST(suite, test_read_write_ints);
     SUITE_ADD_TEST(suite, test_read_write_txt);
 }
