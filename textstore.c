@@ -208,7 +208,7 @@ static int txt_r_bin(HSTORAGE store, void *result, size_t len)
     size_t size;
 
     bytes = fscanf((FILE *)store.data, "%" PR_SIZET "u ", &size);
-    if (bytes > 0 && size > 0) {
+    if (bytes > 0 && size > 0 && size <= INT_MAX) {
         size_t i;
         unsigned char * buf = (unsigned char *)result;
         for (i = 0; i != size; ++i) {
