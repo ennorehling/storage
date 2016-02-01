@@ -57,7 +57,7 @@ static void test_read_write(CuTest *tc, stream *strm)
 static void test_filestream(CuTest * tc) {
     stream strm;
 
-    fstream_init(&strm, fopen("test.txt", "w+b"));
+    fstream_init(&strm, fopen("test.txt", "w+"));
     test_read(tc, &strm);
     test_readln(tc, &strm);
     test_read_write(tc, &strm);

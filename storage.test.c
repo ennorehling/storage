@@ -16,11 +16,11 @@ typedef struct factory {
 
 #define IO_READ 0x01
 #define IO_WRITE 0x02
+static const char *modes[] = { "", "r", "w", "w+" };
 
 static stream strm;
 
 static void bin_open(storage * store, const char * filename, int mode) {
-    const char *modes[] = { "r", "rb", "wb", "wb+" };
     FILE * F = fopen(filename, modes[mode]);
     
     fstream_init(&strm, F);
@@ -36,7 +36,6 @@ static factory bin_factory = {
 };
 
 static void txt_open(storage * store, const char * filename, int mode) {
-    const char *modes[] = { "r", "rb", "wb", "wb+" };
     FILE * F = fopen(filename, modes[mode]);
     txtstore_init(store, F);
 }
