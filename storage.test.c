@@ -2,7 +2,7 @@
 #include "binarystore.h"
 #include "filestream.h"
 #include "stream.h"
-#include "textstore.h"
+//#include "textstore.h"
 
 #include <CuTest.h>
 #include <stdio.h>
@@ -34,7 +34,7 @@ static void bin_close(storage * store) {
 static factory bin_factory = {
     bin_open, bin_close
 };
-
+/*
 static void txt_open(storage * store, const char * filename, int mode) {
     FILE * F = fopen(filename, modes[mode]);
     txtstore_init(store, F);
@@ -45,7 +45,7 @@ static void txt_close(storage * store) {
 static factory txt_factory = {
     txt_open, txt_close
 };
-
+*/
 static void test_read_write(CuTest * tc, factory * fac)
 {
     const char * filename = "test.dat";
@@ -83,11 +83,11 @@ static void test_read_write(CuTest * tc, factory * fac)
 static void test_read_write_bin(CuTest * tc) {
     test_read_write(tc, &bin_factory);
 }
-
+/*
 static void test_read_write_txt(CuTest * tc) {
     test_read_write(tc, &txt_factory);
 }
-
+*/
 static void test_read_write_ints(CuTest * tc) {
     const char *filename = "test.dat";
     storage store;
@@ -114,5 +114,5 @@ void add_suite_storage(CuSuite *suite)
 {
     SUITE_ADD_TEST(suite, test_read_write_bin);
     SUITE_ADD_TEST(suite, test_read_write_ints);
-    SUITE_ADD_TEST(suite, test_read_write_txt);
+    //SUITE_ADD_TEST(suite, test_read_write_txt);
 }

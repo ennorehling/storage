@@ -1,4 +1,3 @@
-#include "config.h"
 #include "textstore.h"
 #include "storage.h"
 

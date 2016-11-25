@@ -26,7 +26,7 @@ test: bin/tests
 	@bin/tests
 
 bin/tests: obj/tests.o obj/storage.test.o obj/stream.test.o \
-  obj/filestream.o obj/memstream.o obj/binarystore.o obj/textstore.o \
+  obj/filestream.o obj/memstream.o obj/binarystore.o \
   obj/CuTest.o | bin
 	$(CC) $(CFLAGS) $(INCLUDES) -lm $^ -o $@
 
