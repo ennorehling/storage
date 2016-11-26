@@ -71,22 +71,18 @@ static int txt_w_tok(HSTORAGE store, const char *tok)
 
 static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
 {
-    char format[16];
-    if (result && size > 0) {
-        _snprintf(format, sizeof(format), "%%%lus", (unsigned long)size);
-        format[sizeof(format) - 1] = 0;
-        if (fscanf((FILE *)store.data, format, result) != 1) {
-            return EOF;
+    FILE * F = (FILE *)store.data;
+    if (result && size>0) {
+        int c = fgetc(F);
+        if (c==NULL_TOKEN) {
+            result[0] = '\0';
+        } else {
+        // FIXME: the old implementation was shit. This one is just MIA.
         }
-        if (result[0] == NULL_TOKEN) {
-            result[0] = 0;
-        }
+        return 0;
     }
-    else {
-        /* trick to skip when no result expected */
-        return fscanf((FILE *)store.data, "%*s");
-    }
-    return 0;
+    // trick to skip when no result expected
+    return fscanf(F, "%*s");
 }
 
 static int freadstr(FILE * F, char *start, size_t size)
