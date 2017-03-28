@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 FILE (GLOB LIB_HDR *.h)
 ADD_LIBRARY (storage
 	binarystore.c 
-	#textstore.c
+	textstore.c
 	filestream.c
 	memstream.c
 	${LIB_HDR})

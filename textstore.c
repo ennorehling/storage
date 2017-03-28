@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NULL_TOKEN '@'
 #define isxspace(c) (c==160 || isspace(c))
 
 #if defined(WIN64)
@@ -52,37 +51,32 @@ static int txt_r_flt(HSTORAGE store, float * result)
 static int txt_w_tok(HSTORAGE store, const char *tok)
 {
     int result;
-    if (tok == NULL || tok[0] == 0) {
-        result = fputc(NULL_TOKEN, (FILE *)store.data);
-    }
-    else {
-#ifndef NDEBUG
-        const char *find = strchr(tok, ' ');
-        if (!find)
-            find = strchr(tok, NULL_TOKEN);
-        assert(!find || !"reserved character in token");
-        assert(tok[0] != ' ');
-#endif
-        result = fputs(tok, (FILE *)store.data);
-    }
+    assert(tok);
+    assert(strlen(tok) < TOKEN_MAXSIZE);
+    result = fputs(tok, (FILE *)store.data);
     fputc(' ', (FILE *)store.data);
     return result;
 }
 
+#define STR(a) #a
+#define STRINGIZE(a) STR(a)
 static int txt_r_tok_buf(HSTORAGE store, char *result, size_t size)
 {
     FILE * F = (FILE *)store.data;
-    if (result && size>0) {
-        int c = fgetc(F);
-        if (c==NULL_TOKEN) {
-            result[0] = '\0';
-        } else {
-        // FIXME: the old implementation was shit. This one is just MIA.
+    int err;
+    if (result) {
+        if (size >= TOKEN_MAXSIZE) {
+            err = fscanf(F, "%" STRINGIZE(TOKEN_MAXSIZE) "s", result);
         }
-        return 0;
+        else {
+            result[0] = '\0';
+            err = fscanf(F, "%*s");
+        }
     }
-    // trick to skip when no result expected
-    return fscanf(F, "%*s");
+    else {
+        err = fscanf(F, "%*s");
+    }
+    return err == EOF ? EOF : 0;
 }
 
 static int freadstr(FILE * F, char *start, size_t size)
@@ -107,7 +101,7 @@ static int freadstr(FILE * F, char *start, size_t size)
         case '"':
             if (!quote && str != start) {
                 assert
-                    (!"file contains a \" that isn't at the start of a string.\n");
+                (!"file contains a \" that isn't at the start of a string.\n");
             }
             if (quote) {
                 *str = 0;

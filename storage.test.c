@@ -50,7 +50,7 @@ static void test_read_write(CuTest * tc, factory * fac)
 {
     const char * filename = "test.dat";
     storage store;
-    char buffer[32];
+    char buffer[TOKEN_MAXSIZE];
     int i;
     float f;
 
@@ -61,6 +61,7 @@ static void test_read_write(CuTest * tc, factory * fac)
     CuAssertTrue(tc, store.api->w_brk(store.handle) >= 0);
     CuAssertTrue(tc, store.api->w_str(store.handle, "Hello World") > 0);
     CuAssertTrue(tc, store.api->w_tok(store.handle, "gazebo") >= 0);
+    CuAssertTrue(tc, store.api->w_tok(store.handle, "ja") >= 0);
     fac->close(&store);
 
     fac->open(&store, filename, IO_READ);
@@ -71,10 +72,13 @@ static void test_read_write(CuTest * tc, factory * fac)
 
     CuAssertIntEquals(tc, 0, store.api->r_flt(store.handle, &f));
     CuAssertDblEquals(tc, FLT_MAX, f, FLT_MIN);
-    CuAssertIntEquals(tc, 0, store.api->r_str(store.handle, buffer, 32));
+    CuAssertIntEquals(tc, 0, store.api->r_str(store.handle, buffer, TOKEN_MAXSIZE));
     CuAssertStrEquals(tc, "Hello World", buffer);
-    CuAssertIntEquals(tc, 0, store.api->r_tok(store.handle, buffer, 32));
+    CuAssertIntEquals(tc, 0, store.api->r_tok(store.handle, buffer, TOKEN_MAXSIZE));
     CuAssertStrEquals(tc, "gazebo", buffer);
+    CuAssertIntEquals(tc, 0, store.api->r_tok(store.handle, buffer, TOKEN_MAXSIZE));
+    CuAssertStrEquals(tc, "ja", buffer);
+    CuAssertIntEquals(tc, EOF, store.api->r_tok(store.handle, buffer, TOKEN_MAXSIZE));
     fac->close(&store);
 
     remove(filename);
@@ -114,5 +118,5 @@ void add_suite_storage(CuSuite *suite)
 {
     SUITE_ADD_TEST(suite, test_read_write_bin);
     SUITE_ADD_TEST(suite, test_read_write_ints);
-    (void) test_read_write_txt; // DISABLE_TEST
+    SUITE_ADD_TEST(suite, test_read_write_txt);
 }
