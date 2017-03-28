@@ -18,7 +18,7 @@ TARGET_LINK_LIBRARIES (test_storage storage)
 ADD_TEST (storage test_storage)
 
 IF (MSVC)
-    FIND_PACKAGE (MSVC MODULE)
+    include (MSVC)
     MSVC_CRT_SECURE_NO_WARNINGS (${PROJECT_NAME} test_storage)
 ENDIF (MSVC)
 
