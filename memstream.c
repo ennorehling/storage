@@ -14,13 +14,14 @@ typedef struct page {
 } page;
 
 typedef struct memstream {
+    size_t pagesize;
     struct page * pages;
     struct page * active;
     char *pos, *tail;
 } memstream;
 
-static page *alloc_page(void) {
-    page * pg = malloc(sizeof(page) + PAGELEN);
+static page *alloc_page(size_t size) {
+    page * pg = malloc(sizeof(page) + size);
     if (pg) {
         pg->next = 0;
         pg->ptr = (char *)(pg + 1);
@@ -40,25 +41,27 @@ static size_t ms_write(HSTREAM s, const void* out, size_t len) {
     size_t outlen = len;
 
     if (!ms->pages) {
-        ms->pages = ms->active = alloc_page();
+        ms->pages = ms->active = alloc_page(ms->pagesize);
         ms->pos = ms->active->ptr;
     }
     pg = ms->active;
     dst = ms->pos;
     while (outlen) {
-        size_t bytes = pg->ptr + PAGELEN - dst;
+        size_t bytes = pg->ptr + ms->pagesize - dst;
         if (bytes == 0) {
             if (!pg->next) {
-                pg->next = alloc_page();
+                pg->next = alloc_page(ms->pagesize);
             }
+            ms->active = pg->next;
             pg = pg->next;
-            src = pg->ptr;
+            dst = pg->ptr;
+        } else {
+            if (bytes > outlen) bytes = outlen;
+            memcpy(dst, src, bytes);
+            outlen -= bytes;
+            dst += bytes;
+            src += bytes;
         }
-        if (bytes > outlen) bytes = outlen;
-        memcpy(dst, src, bytes);
-        outlen -= bytes;
-        dst += bytes;
-        src += bytes;
     }
     ms->tail = ms->pos = dst;
     return len - outlen;
@@ -72,7 +75,7 @@ static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
     page * pg = ms->active;
 
     while (src && outlen > 0) {
-        size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < PAGELEN) ? (ms->tail - pg->ptr) : PAGELEN;
+        size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < ms->pagesize) ? (ms->tail - pg->ptr) : ms->pagesize;
         size_t bytes = pg->ptr + pglen - src;
         if (bytes > outlen) bytes = outlen;
 
@@ -86,8 +89,8 @@ static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
             if (!pg->next) {
                 break;
             }
-            pg = pg->next;
-            src = pg->ptr;
+            ms->active = pg = pg->next;
+            ms->pos = src = pg->ptr;
         }
     }
     ms->active = pg;
@@ -108,20 +111,24 @@ static int ms_readln(HSTREAM s, char* out, size_t outlen) {
     char *end, *src = ms->pos;
 
     while (pg && outlen > 0) {
-        size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < PAGELEN) ? (ms->tail - pg->ptr) : PAGELEN;
+        size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < ms->pagesize) ? (ms->tail - pg->ptr) : ms->pagesize;
 
         end = (char *)memchr(src, '\n', pglen - (src - pg->ptr));
         if (!end) {
             size_t copy = pglen - (src - pg->ptr);
             if (copy > outlen) copy = outlen;
-            if (copy == 0) return EOF;
+            if (copy == 0 && pg->next == 0) return EOF;
             memcpy(out, src, copy);
             outlen -= copy;
             out += copy;
-            pg = pg->next;
+            ms->active = pg = pg->next;
+            if (pg == 0) {
+                out[0] = '\0';
+                return 0;
+            }
             src = ms->pos = pg->ptr;
         }
-        else if (end > src) {
+        else if (end >= src) {
             size_t copy = end - src;
             if (copy > outlen) copy = outlen;
             ms->pos = end + 1;
@@ -147,15 +154,20 @@ static const stream_i api = {
     ms_rewind
 };
 
-void mstream_init(struct stream * strm) {
+void mstream_init_size(struct stream * strm, size_t pagesize) {
     memstream * ms = (memstream *)malloc(sizeof(memstream));
     if (ms) {
+        ms->pagesize = pagesize>0?pagesize:PAGELEN;
         ms->pages = 0;
         ms->pos = 0;
         ms->tail = 0;
         strm->api = &api;
         strm->handle.data = ms;
     }
+}
+
+void mstream_init(struct stream * strm) {
+    mstream_init_size(strm, PAGELEN);
 }
 
 void mstream_done(struct stream * strm)
