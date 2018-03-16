@@ -114,11 +114,16 @@ static int ms_readln(HSTREAM s, char* out, size_t outlen) {
         if (!end) {
             size_t copy = pglen - (src - pg->ptr);
             if (copy > outlen) copy = outlen;
-            if (copy == 0) return EOF;
+            if (copy == 0) {
+                return EOF;
+            }
             memcpy(out, src, copy);
             outlen -= copy;
             out += copy;
             pg = pg->next;
+            if (!pg) {
+                return EOF;
+            }
             src = ms->pos = pg->ptr;
         }
         else if (end > src) {
