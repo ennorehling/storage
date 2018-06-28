@@ -45,7 +45,7 @@ static void test_readln_unterminated(CuTest * tc, const stream * strm) {
     CuAssertIntEquals(tc, 11, strm->api->write(strm->handle, hello, strlen(hello)));
 
     strm->api->rewind(strm->handle);
-    CuAssertIntEquals(tc, EOF, strm->api->readln(strm->handle, buf, sizeof(buf)));
+    CuAssertIntEquals(tc, 0, strm->api->readln(strm->handle, buf, sizeof(buf)));
     CuAssertStrEquals(tc, hello, buf);
 }
 

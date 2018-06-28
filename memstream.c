@@ -123,7 +123,7 @@ static int ms_readln(HSTREAM s, char* out, size_t outlen) {
             pg = pg->next;
             if (pg == NULL) {
                 *out = '\0';
-                return EOF;
+                return 0;
             }
             src = ms->pos = pg->ptr;
         }
