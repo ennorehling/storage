@@ -1,26 +1,28 @@
 cmake_minimum_required(VERSION 2.9)
 project (storage C)
 
-ENABLE_TESTING()
+# see https://cmake.org/pipermail/cmake/2010-January/034669.html
+string(REGEX REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+enable_testing()
 
-FILE (GLOB LIB_HDR *.h)
-ADD_LIBRARY (storage
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+file (GLOB LIB_HDR *.h)
+add_library (storage
 	binarystore.c 
 	textstore.c
 	filestream.c
 	memstream.c
 	${LIB_HDR})
 
-ADD_EXECUTABLE (test_storage tests.c storage.test.c stream.test.c CuTest.c)
-TARGET_LINK_LIBRARIES (test_storage storage)
-ADD_TEST (storage test_storage)
+add_executable (test_storage tests.c storage.test.c stream.test.c CuTest.c)
+target_link_libraries (test_storage storage)
+add_test (storage test_storage)
 
 IF (MSVC)
-    include (MSVC)
-    MSVC_CRT_SECURE_NO_WARNINGS (${PROJECT_NAME} test_storage)
+  target_compile_definitions(storage PUBLIC _CRT_SECURE_NO_WARNINGS)
 ENDIF (MSVC)
 
-SET (STORAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "storage headers")
-SET (STORAGE_LIBRARIES storage CACHE INTERNAL "storage libraries")
+set (STORAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "storage headers")
+set (STORAGE_LIBRARIES storage CACHE INTERNAL "storage libraries")

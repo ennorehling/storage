@@ -10,3 +10,4 @@ obj/
 *.o
 *.opensdf
 build*/
+/.vs
