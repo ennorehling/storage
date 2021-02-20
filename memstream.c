@@ -67,7 +67,6 @@ static int ms_write(HSTREAM s, const void* out, size_t len) {
 static int ms_read(HSTREAM s, void* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     char *dst = (char *)out;
-    char *start = out;
     char *src = ms->pos;
     page * pg = ms->active;
 
