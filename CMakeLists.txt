@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.13)
 project (storage C)
 
 # see https://cmake.org/pipermail/cmake/2010-January/034669.html
-string(REGEX REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#cmake_policy(SET CMP0092 NEW)
+#string(REGEX REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 enable_testing()
 
