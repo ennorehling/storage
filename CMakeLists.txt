@@ -22,7 +22,8 @@ target_link_libraries (test_storage storage)
 add_test (storage test_storage)
 
 IF (MSVC)
-  target_compile_definitions(storage PUBLIC _CRT_SECURE_NO_WARNINGS)
+  #target_compile_definitions(storage PRIVATE _CRT_SECURE_NO_WARNINGS)
+  target_compile_options(storage PRIVATE /WX /MP)
 ENDIF (MSVC)
 
 set (STORAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "storage headers")

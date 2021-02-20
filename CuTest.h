@@ -8,7 +8,7 @@
 
 /* CuString */
 
-char* CuStrAlloc(int size);
+char* CuStrAlloc(size_t size);
 char* CuStrCopy(const char* old);
 
 #define CU_ALLOC(TYPE)		((TYPE*) malloc(sizeof(TYPE)))
