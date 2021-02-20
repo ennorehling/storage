@@ -155,7 +155,7 @@ static const stream_i api = {
     ms_rewind
 };
 
-void mstream_init(struct stream * strm) {
+int mstream_init(struct stream * strm) {
     memstream * ms = (memstream *)malloc(sizeof(memstream));
     if (ms) {
         ms->pages = 0;
@@ -163,7 +163,9 @@ void mstream_init(struct stream * strm) {
         ms->tail = 0;
         strm->api = &api;
         strm->handle.data = ms;
+        return 0;
     }
+    return -1;
 }
 
 void mstream_done(struct stream * strm)

@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 struct stream;
-void mstream_init(struct stream * strm);
+int mstream_init(struct stream * strm);
 void mstream_done(struct stream * strm);
 
 #ifdef __cplusplus
