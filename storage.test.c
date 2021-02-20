@@ -56,12 +56,12 @@ static void test_read_write(CuTest * tc, factory * fac)
 
     fac->open(&store, filename, IO_WRITE);
     CuAssertPtrNotNull(tc, store.handle.data);
-    CuAssertTrue(tc, store.api->w_int(store.handle, 42) > 0);
-    CuAssertTrue(tc, store.api->w_flt(store.handle, FLT_MAX) > 0);
-    CuAssertTrue(tc, store.api->w_brk(store.handle) >= 0);
-    CuAssertTrue(tc, store.api->w_str(store.handle, "Hello World") > 0);
-    CuAssertTrue(tc, store.api->w_tok(store.handle, "gazebo") >= 0);
-    CuAssertTrue(tc, store.api->w_tok(store.handle, "ja") >= 0);
+    CuAssertIntEquals(tc, 0, store.api->w_int(store.handle, 42));
+    CuAssertIntEquals(tc, 0, store.api->w_flt(store.handle, FLT_MAX));
+    CuAssertIntEquals(tc, 0, store.api->w_brk(store.handle));
+    CuAssertIntEquals(tc, 0, store.api->w_str(store.handle, "Hello World"));
+    CuAssertIntEquals(tc, 0, store.api->w_tok(store.handle, "gazebo"));
+    CuAssertIntEquals(tc, 0, store.api->w_tok(store.handle, "ja"));
     fac->close(&store);
 
     fac->open(&store, filename, IO_READ);
@@ -100,8 +100,8 @@ static void test_read_write_ints(CuTest * tc) {
     remove(filename);
 
     bin_open(&store, filename, IO_WRITE);
-    CuAssertIntEquals(tc, 3, WRITE_INT(&store, 355747));
-    CuAssertIntEquals(tc, 3, WRITE_INT(&store, 416957));
+    CuAssertIntEquals(tc, 0, WRITE_INT(&store, 355747));
+    CuAssertIntEquals(tc, 0, WRITE_INT(&store, 416957));
     bin_close(&store);
 
     bin_open(&store, filename, IO_READ);

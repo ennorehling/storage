@@ -11,51 +11,52 @@
 
 #define isxspace(c) (c==160 || isspace(c))
 
-#if defined(WIN64)
-#define PR_SIZET "I"
-#elif defined(WIN32)
-#define PR_SIZET ""
-#else
-#define PR_SIZET "z"
-#endif
-
 static int txt_w_brk(HSTORAGE store)
 {
-    putc('\n', (FILE *)store.data);
-    return 1;
+    if (putc('\n', (FILE*)store.data) == EOF) return EOF;
+    return 0;
 }
 
 static int txt_w_int(HSTORAGE store, int arg)
 {
-    return fprintf((FILE *)store.data, "%d ", arg);
+    int err = fprintf((FILE *)store.data, "%d ", arg);
+    if (err < 0) {
+        return err;
+    }
+    return 0;
 }
 
 static int txt_r_int(HSTORAGE store, int * result)
 {
     int n, err = fscanf((FILE *)store.data, "%d", result ? result : &n);
-    return (err == 1) ? 0 : EOF;
+    return (err == 1) ? 0 : err;
 }
 
 static int txt_w_flt(HSTORAGE store, float arg)
 {
-    return fprintf((FILE *)store.data, "%f ", arg);
+    int err = fprintf((FILE*)store.data, "%f ", arg);
+    if (err < 0) {
+        return err;
+    }
+    return 0;
 }
 
 static int txt_r_flt(HSTORAGE store, float * result)
 {
     float flt;
     int err = fscanf((FILE *)store.data, "%f", result ? result : &flt);
-    return (err == 1) ? 0 : EOF;
+    return (err == 1) ? 0 : err;
 }
 
 static int txt_w_tok(HSTORAGE store, const char *tok)
 {
-    int result;
+    int err;
     assert(tok);
     assert(strlen(tok) < TOKEN_MAXSIZE);
-    result = fputs(tok, (FILE *)store.data);
-    fputc(' ', (FILE *)store.data);
-    return result;
+    err = fputs(tok, (FILE *)store.data);
+    if (err < 0) return err;
+    err = fputc(' ', (FILE *)store.data);
+    return (err == ' ') ? 0 : err;
 }
 
 #define STR(a) #a
@@ -92,7 +93,7 @@ static int freadstr(FILE * F, char *start, size_t size)
             }
             if (!quote) {
                 *str = 0;
-                return (int)(str - start);
+                return 0;
             }
         }
         switch (c) {
@@ -105,7 +106,7 @@ static int freadstr(FILE * F, char *start, size_t size)
             }
             if (quote) {
                 *str = 0;
-                return (int)(str - start);
+                return 0;
             }
             quote = 1;
             break;
@@ -135,81 +136,40 @@ static int freadstr(FILE * F, char *start, size_t size)
 
 static int fwritestr(FILE * F, const char *str)
 {
-    int nwrite = 0;
-    fputc('\"', F);
+    if (fputc('\"', F) == EOF) return EOF;
     if (str) {
         while (*str) {
             int c = (int)(unsigned char)*str++;
             switch (c) {
             case '"':
             case '\\':
-                fputc('\\', F);
-                fputc(c, F);
-                nwrite += 2;
+                if (fputc('\\', F) == EOF) return EOF;
+                if (fputc(c, F) == EOF) return EOF;
                 break;
             case '\n':
-                fputc('\\', F);
-                fputc('n', F);
-                nwrite += 2;
+                if (fputc('\\', F) == EOF) return EOF;
+                if (fputc('n', F) == EOF) return EOF;
                 break;
             default:
-                fputc(c, F);
-                ++nwrite;
+                if (fputc(c, F) == EOF) return EOF;
             }
         }
     }
-    fputc('\"', F);
-    return nwrite + 2;
+    if (fputc('\"', F) == EOF) return EOF;
+    return 0;
 }
 
 static int txt_w_str(HSTORAGE store, const char *str)
 {
-    int result = fwritestr((FILE *)store.data, str);
-    fputc(' ', (FILE *)store.data);
-    return result + 1;
+    int err = fwritestr((FILE *)store.data, str);
+    if (err) return err;
+    if (' ' != fputc(' ', (FILE*)store.data)) return EOF;
+    return 0;
 }
 
 static int txt_r_str_buf(HSTORAGE store, char *result, size_t size)
 {
-    freadstr((FILE *)store.data, result, size);
-    return 0;
-}
-
-static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
-{
-    int bytes;
-
-    bytes = fprintf((FILE *)store.data, "%" PR_SIZET "u ", size);
-    if (bytes > 0 && size > 0) {
-        size_t i;
-        const unsigned char * buf = (const unsigned char *)arg;
-        for (i = 0; i != size; ++i) {
-            int b = fprintf((FILE *)store.data, "%02x", buf[i]);
-            if (b < 0) return b;
-            bytes += b;
-        }
-    }
-    return bytes;
-}
-
-static int txt_r_bin(HSTORAGE store, void *result, size_t len)
-{
-    int bytes;
-    size_t size;
-
-    bytes = fscanf((FILE *)store.data, "%" PR_SIZET "u ", &size);
-    if (bytes > 0 && size > 0 && size <= INT_MAX) {
-        size_t i;
-        unsigned char * buf = (unsigned char *)result;
-        for (i = 0; i != size; ++i) {
-            unsigned int uc;
-            int b = fscanf((FILE *)store.data, "%02x", &uc);
-            if (b < 0) return b;
-            if (i < len) buf[i] = (unsigned char)uc;
-            bytes += b;
-        }
-    }
-    return bytes;
+    return freadstr((FILE *)store.data, result, size);
 }
 
 const storage_i text_api = {
@@ -218,7 +178,6 @@ const storage_i text_api = {
     txt_w_flt, txt_r_flt,
     txt_w_tok, txt_r_tok_buf,
     txt_w_str, txt_r_str_buf,
-    txt_w_bin, txt_r_bin,
 };
 
 void txtstore_init(struct storage * store, FILE *F) {

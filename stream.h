@@ -13,9 +13,9 @@ extern "C" {
 
     typedef struct stream_i {
         int(*writeln)(HSTREAM s, const char *out);
-        size_t(*write)(HSTREAM s, const void *out, size_t outlen);
+        int(*write)(HSTREAM s, const void *out, size_t outlen);
         int(*readln)(HSTREAM s, char *out, size_t outlen);
-        size_t(*read)(HSTREAM s, void *out, size_t outlen);
+        int(*read)(HSTREAM s, void *out, size_t outlen);
         void(*rewind)(HSTREAM s);
     } stream_i;
 

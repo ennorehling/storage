@@ -8,7 +8,6 @@
 
 static void test_read(CuTest * tc, const stream * strm) {
     char buf[16];
-    size_t sz;
 
     strm->api->rewind(strm->handle);
     CuAssertIntEquals(tc, 0, strm->api->writeln(strm->handle, "Hello"));
@@ -17,10 +16,11 @@ static void test_read(CuTest * tc, const stream * strm) {
     strm->api->rewind(strm->handle);
 
     buf[12]='\0';
-    sz = strm->api->read(strm->handle, buf, sizeof(buf));
-    CuAssertIntEquals(tc, 0, buf[sz]);
+    CuAssertIntEquals(tc, EOF, strm->api->read(strm->handle, buf, sizeof(buf)));
+    strm->api->rewind(strm->handle);
+    CuAssertIntEquals(tc, 0, strm->api->read(strm->handle, buf, 12));
+    CuAssertIntEquals(tc, '\0', buf[12]);
     CuAssertStrEquals(tc, "Hello\nWorld\n", buf);
-    CuAssertIntEquals(tc, 12, sz);
 }
 
 static void test_readln(CuTest * tc, const stream * strm) {
@@ -44,7 +44,7 @@ static void test_readln_unterminated(CuTest * tc, const stream * strm) {
     char buf[64];
     const char * hello = "Hello World";
 
-    CuAssertIntEquals(tc, 11, strm->api->write(strm->handle, hello, strlen(hello)));
+    CuAssertIntEquals(tc, 0, strm->api->write(strm->handle, hello, strlen(hello)));
 
     strm->api->rewind(strm->handle);
     CuAssertIntEquals(tc, 0, strm->api->readln(strm->handle, buf, sizeof(buf)));
@@ -56,22 +56,29 @@ static void test_read_write(CuTest *tc, stream *strm)
     char ch;
 
     strm->api->rewind(strm->handle);
-    CuAssertIntEquals(tc, 3, strm->api->write(strm->handle, "123", 3));
+    CuAssertIntEquals(tc, 0, strm->api->write(strm->handle, "123", 3));
     strm->api->rewind(strm->handle);
-    CuAssertIntEquals(tc, 1, strm->api->read(strm->handle, &ch, 1));
+    CuAssertIntEquals(tc, 0, strm->api->read(strm->handle, &ch, 1));
     CuAssertIntEquals(tc, '1', ch);
-    CuAssertIntEquals(tc, 1, strm->api->read(strm->handle, &ch, 1));
+    CuAssertIntEquals(tc, 0, strm->api->read(strm->handle, &ch, 1));
     CuAssertIntEquals(tc, '2', ch);
-    CuAssertIntEquals(tc, 1, strm->api->read(strm->handle, &ch, 1));
+    CuAssertIntEquals(tc, 0, strm->api->read(strm->handle, &ch, 1));
     CuAssertIntEquals(tc, '3', ch);
+    CuAssertIntEquals(tc, EOF, strm->api->read(strm->handle, &ch, 1));
 }
 
 static void test_filestream(CuTest * tc) {
     stream strm;
 
-    fstream_init(&strm, fopen("test.txt", "w+"));
+    fstream_init(&strm, fopen("test.txt", "wbT+"));
     test_read(tc, &strm);
+    fstream_done(&strm);
+
+    fstream_init(&strm, fopen("test.txt", "wbT+"));
     test_readln(tc, &strm);
+    fstream_done(&strm);
+
+    fstream_init(&strm, fopen("test.txt", "wbT+"));
     test_read_write(tc, &strm);
     fstream_done(&strm);
     remove("test.txt");
@@ -82,8 +89,19 @@ static void test_memstream(CuTest * tc) {
 
     mstream_init(&strm);
     test_read_write(tc, &strm);
+    mstream_done(&strm);
+
+    mstream_init(&strm);
     test_read(tc, &strm);
+
+    mstream_init(&strm);
+    mstream_done(&strm);
+
+    mstream_init(&strm);
     test_readln(tc, &strm);
+    mstream_done(&strm);
+
+    mstream_init(&strm);
     test_readln_unterminated(tc, &strm);
     mstream_done(&strm);
 }

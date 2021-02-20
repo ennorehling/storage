@@ -1,3 +1,6 @@
+#ifdef _MSC_VER
+#pragma warning(disable:4267)
+#endif
 #include <assert.h>
 #include <setjmp.h>
 #include <stdlib.h>

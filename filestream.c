@@ -1,16 +1,19 @@
 #include "stream.h"
 #include "filestream.h"
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 static int fs_readln(HSTREAM s, char * out, size_t outlen) {
     char * eol;
     FILE * F = (FILE *)s.data;
 
+    assert(outlen <= INT_MAX);
     if (!out) {
-        return fseek(F, outlen, SEEK_CUR);
+        return fseek(F, (long)outlen, SEEK_CUR);
     }
-    if (fgets(out, outlen, F) != out) {
+    if (fgets(out, (int)outlen, F) != out) {
         return EOF;
     }
     eol = strchr(out, '\n');
@@ -20,16 +23,21 @@ static int fs_readln(HSTREAM s, char * out, size_t outlen) {
     return 0;
 }
 
-static size_t fs_read(HSTREAM s, void * out, size_t outlen) {
+static int fs_read(HSTREAM s, void * out, size_t outlen) {
     FILE * F = (FILE *)s.data;
+    assert(outlen <= INT_MAX);
     if (!out) {
-        int err = fseek(F, outlen, SEEK_CUR);
-        if (err) {
-            return 0;
-        }
-        return outlen;
+        return fseek(F, (long)outlen, SEEK_CUR);
     }
-    return fread(out, 1, outlen, F);
+    if (outlen > 0) {
+        if (fread(out, 1, outlen, F) != outlen) {
+            if (feof(F)) {
+                return EOF;
+            }
+            return ferror(F);
+        }
+    }
+    return 0;
 }
 
 static int fs_writeln(HSTREAM s, const char * out) {
@@ -45,9 +53,17 @@ static int fs_writeln(HSTREAM s, const char * out) {
     return 0;
 }
 
-static size_t fs_write(HSTREAM s, const void * out, size_t len) {
-    FILE * F = (FILE *)s.data;
-    return fwrite(out, 1, len, F);
+static int fs_write(HSTREAM s, const void * out, size_t len) {
+    if (len > 0) {
+        FILE* F = (FILE*)s.data;
+        size_t bytes;
+
+        bytes = fwrite(out, 1, len, F);
+        if (bytes != len) {
+            return ferror(F);
+        }
+    }
+    return 0;
 }
 
 static void fs_rewind(HSTREAM s) {

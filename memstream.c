@@ -32,7 +32,7 @@ static void free_page(page * pg) {
     free(pg);
 }
 
-static size_t ms_write(HSTREAM s, const void* out, size_t len) {
+static int ms_write(HSTREAM s, const void* out, size_t len) {
     memstream * ms = (memstream *)s.data;
     page *pg;
     char *dst;
@@ -61,45 +61,48 @@ static size_t ms_write(HSTREAM s, const void* out, size_t len) {
         src += bytes;
     }
     ms->tail = ms->pos = dst;
-    return len - outlen;
+    return 0;
 }
 
-static size_t ms_read(HSTREAM s, void* out, size_t outlen) {
+static int ms_read(HSTREAM s, void* out, size_t outlen) {
     memstream * ms = (memstream *)s.data;
     char *dst = (char *)out;
     char *start = out;
     char *src = ms->pos;
     page * pg = ms->active;
 
-    while (src && outlen > 0) {
+    while (pg && src) {
         size_t pglen = (ms->tail > pg->ptr && ms->tail - pg->ptr < PAGELEN) ? (ms->tail - pg->ptr) : PAGELEN;
         size_t bytes = pg->ptr + pglen - src;
         if (bytes > outlen) bytes = outlen;
+
+        if (outlen == 0) {
+            return 0;
+        }
 
         memcpy(dst, src, bytes);
         src += bytes;
         dst += bytes;
         outlen -= bytes;
         assert(src <= pg->ptr + pglen);
-        ms->pos = src;
+
+        /* reached the end of a page? */
         if (src == pg->ptr + pglen) {
-            if (!pg->next) {
-                break;
-            }
-            pg = pg->next;
-            src = pg->ptr;
+            ms->active = pg = pg->next;
+            src = pg ? pg->ptr : NULL;
         }
+        ms->pos = src;
     }
-    ms->active = pg;
-    return dst - start;
+    return (outlen == 0) ? 0 : EOF;
 }
 
 static int ms_writeln(HSTREAM s, const char * out) {
     size_t len = strlen(out);
-    size_t total;
-    total = ms_write(s, out, len);
-    total += ms_write(s, "\n", 1);
-    return total-len-1;
+    int err;
+    if (0 != (err = ms_write(s, out, len))) {
+        return err;
+    }
+    return ms_write(s, "\n", 1);
 }
 
 static int ms_readln(HSTREAM s, char* out, size_t outlen) {

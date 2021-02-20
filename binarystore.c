@@ -71,25 +71,22 @@ static int bin_w_int_pak(HSTORAGE hstore, int arg)
     stream *strm = (stream *)hstore.data;
     char buffer[5];
     size_t size = pack_int(arg, buffer);
-    return (int)strm->api->write(strm->handle, buffer, size);
+    return strm->api->write(strm->handle, buffer, size);
 }
 
 static int bin_r_int_pak(HSTORAGE hstore, int * result)
 {
     stream *strm = (stream *)hstore.data;
-    int v = 0;
-    size_t items;
+    int v = 0, err;
     char ch;
 
-    items = strm->api->read(strm->handle, &ch, sizeof(char));
-    if (items != 1) {
-        return EOF;
+    if (0 != (err = strm->api->read(strm->handle, &ch, sizeof(char)))) {
+        return err;
     }
     while (ch & 0x80) {
         v = (v << 7) | (ch & 0x7f);
-        items = strm->api->read(strm->handle, &ch, sizeof(char));
-        if (items != 1) {
-            return EOF;
+        if (0 != (err = strm->api->read(strm->handle, &ch, sizeof(char)))) {
+            return err;
         }
     }
     if (result) {
@@ -112,26 +109,23 @@ static int bin_w_flt(HSTORAGE hstore, float arg)
 static int bin_r_flt(HSTORAGE hstore, float * result)
 {
     stream *strm = (stream *)hstore.data;
-    size_t bytes;
     float flt;
 
-    bytes = strm->api->read(strm->handle, result ? result : &flt, sizeof(float));
-    return (bytes == sizeof(float)) ? 0 : EOF;
+    return strm->api->read(strm->handle, result ? result : &flt, sizeof(float));
 }
 
 static int bin_w_str(HSTORAGE hstore, const char *tok)
 {
     stream *strm = (stream *)hstore.data;
-    int result;
     if (tok == NULL || tok[0] == 0) {
-        result = bin_w_int_pak(hstore, 0);
+        return bin_w_int_pak(hstore, 0);
     }
     else {
         int size = (int)strlen(tok);
-        result = bin_w_int_pak(hstore, size);
-        result += strm->api->write(strm->handle, tok, size);
+        int err = bin_w_int_pak(hstore, size);
+        if (err) return err;
+        return strm->api->write(strm->handle, tok, size);
     }
-    return result;
 }
 
 static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
@@ -147,17 +141,16 @@ static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
         result[0] = 0;
     }
     else if (size > 0) {
-        size_t rd, len, items;
+        size_t rd, len;
         len = (size_t)i;
         rd = (len < size) ? len : (size - 1);
-        items = strm->api->read(strm->handle, result, rd);
-        if (items != rd) {
-            return EOF;
+        if (0 != (err = strm->api->read(strm->handle, result, rd))) {
+            return err;
         }
         else {
             if (rd < len) {
-                strm->api->read(strm->handle, 0, len - rd);
                 result[size - 1] = 0;
+                strm->api->read(strm->handle, NULL, len - rd);
                 return ENOMEM;
             }
             else {
@@ -166,46 +159,9 @@ static int bin_r_str_buf(HSTORAGE hstore, char *result, size_t size)
         }
     }
     else {
-        strm->api->read(strm->handle, 0, i);
+        return strm->api->read(strm->handle, 0, i);
     }
     return 0;
-}
-
-static int bin_w_bin(HSTORAGE hstore, const void *arg, size_t size)
-{
-    stream *strm = (stream *)hstore.data;
-    int result;
-    int len = (int)size;
-
-    result = bin_w_int_pak(hstore, len);
-    if (len > 0) {
-        result += strm->api->write(strm->handle, arg, len);
-    }
-    return result;
-}
-
-static int bin_r_bin(HSTORAGE hstore, void *result, size_t size)
-{
-    stream *strm = (stream *)hstore.data;
-    size_t items;
-    int len, err;
-
-    err = bin_r_int_pak(hstore, &len);
-    if (err != 0) {
-        return err;
-    }
-    if (len > 0) {
-        if ((size_t)len > size) {
-            /* "destination buffer too small, skip */
-            strm->api->read(strm->handle, 0, len);
-            return ENOMEM;
-        }
-        else {
-            items = strm->api->read(strm->handle, result, len);
-            return (items == 1) ? 0 : EOF;
-        }
-    }
-    return EILSEQ;
 }
 
 const storage_i binary_api = {
@@ -214,8 +170,6 @@ const storage_i binary_api = {
     bin_w_flt, bin_r_flt,         /* float storage */
     bin_w_str, bin_r_str_buf,     /* token storage */
     bin_w_str, bin_r_str_buf,     /* string storage */
-    bin_w_bin, bin_r_bin,         /* binary storage */
-    /*  bin_open, bin_close */
 };
 
 void binstore_init(struct storage * store, stream * strm) {
