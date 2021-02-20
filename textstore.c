@@ -11,14 +11,6 @@
 
 #define isxspace(c) (c==160 || isspace(c))
 
-#if defined(WIN64)
-#define PR_SIZET "I"
-#elif defined(WIN32)
-#define PR_SIZET ""
-#else
-#define PR_SIZET "z"
-#endif
-
 static int txt_w_brk(HSTORAGE store)
 {
     putc('\n', (FILE *)store.data);
@@ -179,7 +171,7 @@ static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
 {
     int bytes;
 
-    bytes = fprintf((FILE *)store.data, "%" PR_SIZET "u ", size);
+    bytes = fprintf((FILE *)store.data, "%u ", (unsigned int)size);
     if (bytes > 0 && size > 0) {
         size_t i;
         const unsigned char * buf = (const unsigned char *)arg;
@@ -192,20 +184,21 @@ static int txt_w_bin(HSTORAGE store, const void *arg, size_t size)
     return bytes;
 }
 
-static int txt_r_bin(HSTORAGE store, void *result, size_t len)
+static int txt_r_bin(HSTORAGE store, void *result, size_t size)
 {
     int bytes;
-    size_t size;
+    unsigned int length;
 
-    bytes = fscanf((FILE *)store.data, "%" PR_SIZET "u ", &size);
-    if (bytes > 0 && size > 0 && size <= INT_MAX) {
-        size_t i;
+    bytes = fscanf((FILE *)store.data, "%u ", &length);
+    if (bytes > 0 && length > 0) {
         unsigned char * buf = (unsigned char *)result;
-        for (i = 0; i != size; ++i) {
+        unsigned int i;
+
+        for (i = 0; i != length; ++i) {
             unsigned int uc;
             int b = fscanf((FILE *)store.data, "%02x", &uc);
             if (b < 0) return b;
-            if (i < len) buf[i] = (unsigned char)uc;
+            if (i < size) buf[i] = (unsigned char)uc;
             bytes += b;
         }
     }
