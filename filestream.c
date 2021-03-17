@@ -30,7 +30,8 @@ static int fs_read(HSTREAM s, void * out, size_t outlen) {
         return fseek(F, (long)outlen, SEEK_CUR);
     }
     if (outlen > 0) {
-        if (fread(out, 1, outlen, F) != outlen) {
+        size_t bytes = fread(out, 1, outlen, F);
+        if (bytes != outlen) {
             if (feof(F)) {
                 return EOF;
             }
