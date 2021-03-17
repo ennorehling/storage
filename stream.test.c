@@ -67,7 +67,7 @@ static void test_readln_nocrlf(CuTest * tc, const stream * strm) {
 
 static void test_filestream(CuTest * tc) {
     stream strm;
-    char *filename = tmpnam(NULL);
+    const char *filename = "test.txt";
 
     if (filename) {
         FILE *F;
