@@ -5,6 +5,9 @@ project (storage C)
 #cmake_policy(SET CMP0092 NEW)
 #string(REGEX REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
+if (MSVC)
+  add_compile_options(/WX /MP /FC)
+endif (MSVC)
 enable_testing()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
