@@ -44,6 +44,7 @@ extern "C" {
 #define READ_INT(store, intptr) (store)->api->r_int((store)->handle, intptr)
 #define READ_UINT(store, intptr) (store)->api->r_int((store)->handle, (int *)intptr)
 #define WRITE_INT(store, num) (store)->api->w_int((store)->handle, num)
+#define WRITE_UINT(store, num) (store)->api->w_int((store)->handle, (int)num)
 #define READ_FLT(store, intptr) (store)->api->r_flt((store)->handle, intptr)
 #define WRITE_FLT(store, num) (store)->api->w_flt((store)->handle, num)
 
