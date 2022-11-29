@@ -22,7 +22,7 @@ add_library (storage
 add_executable (test_storage tests.c storage.test.c stream.test.c CuTest.c)
 target_link_libraries (test_storage storage)
 set_target_properties(test_storage storage PROPERTIES C_STANDARD 90)
-add_test (storage test_storage)
+add_test (NAME storage COMMAND test_storage)
 
 IF (MSVC)
   #target_compile_definitions(storage PRIVATE _CRT_SECURE_NO_WARNINGS)
