@@ -86,7 +86,7 @@ static void test_read_write(CuTest * tc, factory * fac)
     CuAssertIntEquals(tc, EOF, store.api->r_tok(store.handle, buffer, TOKEN_MAXSIZE));
     fac->close(&store);
 
-    remove(filename);
+    (void) remove(filename);
 }
 
 static void test_read_write_bin(CuTest * tc) {
